@@ -45,15 +45,19 @@ function getMergeRequestTitle(title){
 
 function createMergeRequest(options){
 
-	console.log('create merge request called');
 	exec('git rev-parse --abbrev-ref HEAD', {cwd : projectDir}, function(error,stdout,stderr){
 		var curBranchName = stdout.replace('\n', '');
 		var baseBranch = options.base || curBranchName;
 
 		//TODO : Check if there are any local commits which are not pushed.
 
-		exec('git config branch.' + curBranchName.trim() + '.remote', {cwd : projectDir},  function(error, remote, stderr){
-			//TODO : Check if no remote found. Throw error to set remote tracking branch.
+		exec('git config branch.' + baseBranch.trim() + '.remote', {cwd : projectDir},  function(error, remote, stderr){
+			if(!remote){
+				console.error('Branch ' + baseBranch + " is not tracked by any remote branch.");
+				console.log('Set the remote tracking by `git remote git branch --set-upstream <branch-name> <remote-name>/<branch-name>`');
+				console.log('Eg: `git branch --set-upstream foo upstream/foo`')
+				process.exit(1);				
+			}
 
 			exec('git config remote.' + remote.trim() + '.url', {cwd : projectDir}, function(err, remoteURL, stderr){
 

@@ -52,8 +52,7 @@ To get help use following
 
 #### Fixes
 1. Check if there are any local commits which are not pushed.
-2. Check if no remote found for the branch. Throw error to set remote tracking branch.
-3. Check if remoteURL points to a gitlab repo or not. Throw error if not a gitlab repo.
+2. Check if remoteURL points to a gitlab repo or not. Throw error if not a gitlab repo.
 
 ####Commands 
 
