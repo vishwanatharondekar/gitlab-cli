@@ -43,15 +43,53 @@ function getMergeRequestTitle(title){
 	return promise;	
 }
 
+function getBaseBranchName(baseBranchName){
+	var promise = new Promise(function (resolve, reject) {
+	  	if(baseBranchName){
+	  		resolve(baseBranchName);
+	  	} else {
+			exec('git rev-parse --abbrev-ref HEAD', {cwd : projectDir}, function(error,stdout,stderr){
+				var curBranchName = stdout.replace('\n', '');
+				resolve(curBranchName);
+			});
+	  	}
+	});
+	return promise;	
+}
+
+function getRemoteForBranch(branchName){
+	var promise = new Promise(function (resolve, reject) {
+	  	exec('git config branch.' + branchName.trim() + '.remote', {cwd : projectDir},  function(error, remote, stderr){
+	  		resolve(remote);
+	  	});
+	});
+	return promise;	
+}
+
+function getURLOfRemote(remote){
+	var promise = new Promise(function (resolve, reject) {
+		exec('git config remote.' + remote.trim() + '.url', {cwd : projectDir}, function(err, remoteURL, stderr){
+	  		resolve(remoteURL);
+	  	});
+	});
+	return promise;	
+}
+
+function getProjectInfo(projectName){
+	var promise = new Promise(function (resolve, reject) {
+		gitlab.projects.show(projectName, function(project){
+			resolve(project);
+		});
+	});
+	return promise;	
+}
+
 function createMergeRequest(options){
 
-	exec('git rev-parse --abbrev-ref HEAD', {cwd : projectDir}, function(error,stdout,stderr){
-		var curBranchName = stdout.replace('\n', '');
-		var baseBranch = options.base || curBranchName;
+	getBaseBranchName(options.base).then(function(baseBranch){
 
-		//TODO : Check if there are any local commits which are not pushed.
+		getRemoteForBranch(baseBranch).then(function(remote){
 
-		exec('git config branch.' + baseBranch.trim() + '.remote', {cwd : projectDir},  function(error, remote, stderr){
 			if(!remote){
 				console.error('Branch ' + baseBranch + " is not tracked by any remote branch.");
 				console.log('Set the remote tracking by `git remote git branch --set-upstream <branch-name> <remote-name>/<branch-name>`');
@@ -59,7 +97,7 @@ function createMergeRequest(options){
 				process.exit(1);				
 			}
 
-			exec('git config remote.' + remote.trim() + '.url', {cwd : projectDir}, function(err, remoteURL, stderr){
+			getURLOfRemote(remote).then(function(remoteURL){
 
 				//TODO : Check if remoteURL points to a gitlab repo or not. Throw error if not a gitlab repo.			
 				var regexParseProjectName = new RegExp(".+[:/](.+\/.+)\.git");
