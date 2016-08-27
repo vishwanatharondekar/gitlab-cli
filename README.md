@@ -56,6 +56,5 @@ To get help use following
 
 ####Commands 
 
-1. compare command - Open compare page on gitlab
-2. open-merge-requests - Open merge requests page of the current repo.
+1. open-merge-requests - Open merge requests page of the current repo.
 

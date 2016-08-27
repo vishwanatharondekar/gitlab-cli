@@ -106,6 +106,38 @@ function browse(options){
 	});
 }
 
+function compare(options){
+
+	getBaseBranchName(options.base).then(function(baseBranch){
+
+		getRemoteForBranch(baseBranch).then(function(remote){
+
+			if(!remote){
+				console.error('Branch ' + baseBranch + " is not tracked by any remote branch.");
+				console.log('Set the remote tracking by `git remote git branch --set-upstream <branch-name> <remote-name>/<branch-name>`');
+				console.log('Eg: `git branch --set-upstream foo upstream/foo`')
+				process.exit(1);				
+			}
+
+			getURLOfRemote(remote).then(function(remoteURL){
+
+				//TODO : Check if remoteURL points to a gitlab repo or not. Throw error if not a gitlab repo.			
+				var regexParseProjectName = new RegExp(".+[:/](.+\/.+)\.git");
+
+				var projectName = remoteURL.match(regexParseProjectName)[1];
+				gitlab.projects.show(projectName, function(project){
+					var defaultBranch = project.default_branch;
+					var targetBranch = options.target || defaultBranch;
+					var sourceBranch = baseBranch;
+					var projectId = project.id;
+					open(gitlabURL + "/" + projectName + "/compare/" + targetBranch + "..." + sourceBranch)
+				});
+
+			});
+		});
+	});
+}
+
 function createMergeRequest(options){
 
 	getBaseBranchName(options.base).then(function(baseBranch){
@@ -179,11 +211,14 @@ program
   	browse(options);
   });
 
-// program
-//   .command('compare')
-//   .action(function(command){
-//   	console.log('argumnents in compare :', arguments)
-//   });
+program
+  .command('compare')
+  .option('-b, --base [optional]','Base branch name')
+  .option('-t, --target [optional]','Target branch name')
+  .description('Open compare page between two branches')
+  .action(function(options){
+  	compare(options);
+  });
 
 // program
 //   .command('open-merge-requests')
