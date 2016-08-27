@@ -24,13 +24,22 @@ To get a list of available commands
     gitlab-cli --help
 
 
-## Commands
+## Commands available
 
-This gitlab-cli currently supports only one command.
+    create-merge-request [options]   Create merge request on gitlab
+    browse                           Open current branch page in gitlab
+    compare [options]                Open compare page between two branches
+    open-merge-requests              Opens merge request page for the repo.
 
-To get help use following 
+Check help of each command like following 
 
     gitlab-cli create-merge-request --help
+
+### Running example
+   
+    gitlab-cli create-merge-request -b feature/feature-name -t develop
+
+Above will create pull request for merging feature/feature-name in develop.
 
 ### Options for create-merge-request
 
@@ -53,8 +62,3 @@ To get help use following
 #### Fixes
 1. Check if there are any local commits which are not pushed.
 2. Check if remoteURL points to a gitlab repo or not. Throw error if not a gitlab repo.
-
-####Commands 
-
-1. open-merge-requests - Open merge requests page of the current repo.
-

@@ -138,6 +138,30 @@ function compare(options){
 	});
 }
 
+function openMergeRequests(options){
+	getBaseBranchName(options.base).then(function(baseBranch){
+		getRemoteForBranch(baseBranch).then(function(remote){
+
+			if(!remote){
+				console.error('Branch ' + baseBranch + " is not tracked by any remote branch.");
+				console.log('Set the remote tracking by `git remote git branch --set-upstream <branch-name> <remote-name>/<branch-name>`');
+				console.log('Eg: `git branch --set-upstream foo upstream/foo`')
+				process.exit(1);				
+			}
+
+			getURLOfRemote(remote).then(function(remoteURL){
+				console.log(4);
+
+				//TODO : Check if remoteURL points to a gitlab repo or not. Throw error if not a gitlab repo.			
+				var regexParseProjectName = new RegExp(".+[:/](.+\/.+)\.git");
+				var projectName = remoteURL.match(regexParseProjectName)[1];
+
+				open(gitlabURL + "/" + projectName + "/merge_requests");
+			});
+		});
+	});
+}
+
 function createMergeRequest(options){
 
 	getBaseBranchName(options.base).then(function(baseBranch){
@@ -166,10 +190,6 @@ function createMergeRequest(options){
 
 					getMergeRequestTitle(options.message).then(function(title){
 						
-						console.log('projectId : ', projectId);
-						console.log('sourceBranch : ', sourceBranch);
-						console.log('targetBranch : ', targetBranch);
-						console.log('title : ', title);
 						gitlab.projects.merge_requests.add(projectId, sourceBranch, targetBranch, 0, title, function(mergeRequestResponse){
 							if(mergeRequestResponse.iid){
 								open(gitlabURL + "/" + projectName + "/merge_requests/" + mergeRequestResponse.iid);
@@ -220,11 +240,12 @@ program
   	compare(options);
   });
 
-// program
-//   .command('open-merge-requests')
-//   .action(function(command){
-//   	console.log('argumnents in open-merge-requests :', arguments)
-//   });
+program
+  .command('open-merge-requests')
+  .description('Opens merge request page for the repo.')
+  .action(function(options){
+  	openMergeRequests(options);
+  });
 
 program.parse(process.argv);
 
