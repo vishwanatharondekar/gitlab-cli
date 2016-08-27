@@ -60,7 +60,7 @@ function getBaseBranchName(baseBranchName){
 function getRemoteForBranch(branchName){
 	var promise = new Promise(function (resolve, reject) {
 	  	exec('git config branch.' + branchName.trim() + '.remote', {cwd : projectDir},  function(error, remote, stderr){
-	  		resolve(remote);
+	  		resolve(remote.trim());
 	  	});
 	});
 	return promise;	
@@ -82,6 +82,28 @@ function getProjectInfo(projectName){
 		});
 	});
 	return promise;	
+}
+
+function browse(options){
+	getBaseBranchName().then(function(curBranchName){
+		getRemoteForBranch(curBranchName).then(function(remote){
+			if(!remote){
+				console.error('Branch ' + curBranchName + " is not tracked by any remote branch.");
+				console.log('Set the remote tracking by `git remote git branch --set-upstream <branch-name> <remote-name>/<branch-name>`');
+				console.log('Eg: `git branch --set-upstream foo upstream/foo`')
+			}
+
+			getURLOfRemote(remote).then(function(remoteURL){
+
+				//TODO : Check if remoteURL points to a gitlab repo or not. Throw error if not a gitlab repo.			
+				var regexParseProjectName = new RegExp(".+[:/](.+\/.+)\.git");
+				var projectName = remoteURL.match(regexParseProjectName)[1];
+
+				open(gitlabURL + "/" + projectName + "/tree/" + curBranchName);
+			});
+
+		});
+	});
 }
 
 function createMergeRequest(options){
@@ -150,12 +172,12 @@ program
   	createMergeRequest(options);
   })
 
-// program
-//   .command('browse')
-//   .description('Open current branch page in github')
-//   .action(function(command){
-//   	console.log('argumnents in browse :', arguments);
-//   });
+program
+  .command('browse')
+  .description('Open current branch page in gitlab')
+  .action(function(options){
+  	browse(options);
+  });
 
 // program
 //   .command('compare')
