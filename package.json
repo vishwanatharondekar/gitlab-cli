@@ -1,0 +1,19 @@
+{
+  "name": "gitlab-cli",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {},
+  "author": "",
+  "license": "ISC",
+  "bin": {
+    "gitlab-cli" : "index.js"
+  },
+  "dependencies": {
+    "commander": "^2.9.0",
+    "editor": "^1.0.0",
+    "gitlab": "^1.7.1",
+    "open": "0.0.5",
+    "promise": "^7.1.1"
+  }
+}
