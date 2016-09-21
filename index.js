@@ -6,6 +6,8 @@ var editor = require('editor');
 var fs = require('fs');
 var open = require("open");
 var Promise = require('promise');
+var URL = require('url');
+
 
 if(!process.env.GITLAB_URL){
 	console.error('Please set env name GITLAB_URL');
@@ -150,7 +152,6 @@ function openMergeRequests(options){
 			}
 
 			getURLOfRemote(remote).then(function(remoteURL){
-				console.log(4);
 
 				//TODO : Check if remoteURL points to a gitlab repo or not. Throw error if not a gitlab repo.			
 				var regexParseProjectName = new RegExp(".+[:/](.+\/.+)\.git");
@@ -171,16 +172,31 @@ function createMergeRequest(options){
 			if(!remote){
 				console.error('Branch ' + baseBranch + " is not tracked by any remote branch.");
 				console.log('Set the remote tracking by `git remote git branch --set-upstream <branch-name> <remote-name>/<branch-name>`');
-				console.log('Eg: `git branch --set-upstream foo upstream/foo`')
+				console.log('Eg: `git branch --set-upstream foo upstream/foo`');
 				process.exit(1);				
 			}
 
 			getURLOfRemote(remote).then(function(remoteURL){
 
-				//TODO : Check if remoteURL points to a gitlab repo or not. Throw error if not a gitlab repo.			
 				var regexParseProjectName = new RegExp(".+[:/](.+\/.+)\.git");
+				var gitlabHost =  URL.parse(gitlabURL).host;
 
-				var projectName = remoteURL.match(regexParseProjectName)[1];
+				if(remoteURL.indexOf(gitlabHost)== -1 ){
+					console.error('Remote at which ' + baseBranch + " is tracked is not a gitlab repository at " + gitlabURL);
+					console.log('This utility works only with gitlab remotes.');
+					process.exit(1);	
+				}
+
+
+				var match = remoteURL.match(regexParseProjectName);
+				if(match){
+					var projectName = match[1];
+				} else {
+					console.error('Remote at which ' + baseBranch + " is tracked, It's URL doesn't seem to end with .git . It is assumed that your remote URL will end with .git in this utility. ");
+					console.log('Please contact developer if this is a valid gitlab repository .');
+					process.exit(1);	
+				}
+
 				gitlab.projects.show(projectName, function(project){
 					var defaultBranch = project.default_branch;
 					var targetBranch = options.target || defaultBranch;
