@@ -61,4 +61,3 @@ Above will create pull request for merging feature/feature-name in develop.
 
 #### Fixes
 1. Check if there are any local commits which are not pushed.
-2. Check if remoteURL points to a gitlab repo or not. Throw error if not a gitlab repo.
