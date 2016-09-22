@@ -7,16 +7,16 @@ var fs = require('fs');
 var open = require("open");
 var Promise = require('promise');
 var URL = require('url');
-
+var colors = require('colors');
 
 if(!process.env.GITLAB_URL){
-	console.error('Please set env name GITLAB_URL');
+	console.error(colors.red('Env variable GITLAB_URL is not set. Please set env variable GITLAB_URL') );
 	console.error('Eg GITLAB_URL=http://gitlab.yourcompany.com');
 	process.exit(1);
 }
 
 if(!process.env.GITLAB_TOKEN){
-	console.error('Please set env variable GITLAB_TOKEN');
+	console.error(colors.red('Please set env variable GITLAB_TOKEN') );
 	console.error('Find your token at http://gitlab.yourcompany.com/profile/account');
 	process.exit(1);
 }
@@ -90,7 +90,7 @@ function browse(options){
 	getBaseBranchName().then(function(curBranchName){
 		getRemoteForBranch(curBranchName).then(function(remote){
 			if(!remote){
-				console.error('Branch ' + curBranchName + " is not tracked by any remote branch.");
+				console.error(colors.red( 'Branch ' + curBranchName + " is not tracked by any remote branch.") );
 				console.log('Set the remote tracking by `git remote git branch --set-upstream <branch-name> <remote-name>/<branch-name>`');
 				console.log('Eg: `git branch --set-upstream foo upstream/foo`')
 			}
@@ -115,7 +115,7 @@ function compare(options){
 		getRemoteForBranch(baseBranch).then(function(remote){
 
 			if(!remote){
-				console.error('Branch ' + baseBranch + " is not tracked by any remote branch.");
+				console.error(colors.red( 'Branch ' + baseBranch + " is not tracked by any remote branch." ) );
 				console.log('Set the remote tracking by `git remote git branch --set-upstream <branch-name> <remote-name>/<branch-name>`');
 				console.log('Eg: `git branch --set-upstream foo upstream/foo`')
 				process.exit(1);				
@@ -145,7 +145,7 @@ function openMergeRequests(options){
 		getRemoteForBranch(baseBranch).then(function(remote){
 
 			if(!remote){
-				console.error('Branch ' + baseBranch + " is not tracked by any remote branch.");
+				console.error(colors.red('Branch ' + baseBranch + " is not tracked by any remote branch.") );
 				console.log('Set the remote tracking by `git remote git branch --set-upstream <branch-name> <remote-name>/<branch-name>`');
 				console.log('Eg: `git branch --set-upstream foo upstream/foo`')
 				process.exit(1);				
@@ -170,7 +170,7 @@ function createMergeRequest(options){
 		getRemoteForBranch(baseBranch).then(function(remote){
 
 			if(!remote){
-				console.error('Branch ' + baseBranch + " is not tracked by any remote branch.");
+				console.error(colors.red('Branch ' + baseBranch + " is not tracked by any remote branch." ));
 				console.log('Set the remote tracking by `git remote git branch --set-upstream <branch-name> <remote-name>/<branch-name>`');
 				console.log('Eg: `git branch --set-upstream foo upstream/foo`');
 				process.exit(1);				
@@ -182,8 +182,7 @@ function createMergeRequest(options){
 				var gitlabHost =  URL.parse(gitlabURL).host;
 
 				if(remoteURL.indexOf(gitlabHost)== -1 ){
-					console.error('Remote at which ' + baseBranch + " is tracked is not a gitlab repository at " + gitlabURL);
-					console.log('This utility works only with gitlab remotes.');
+					console.error(colors.red('Remote at which ' + baseBranch + " is tracked is not a gitlab repository at " + gitlabURL ));
 					process.exit(1);	
 				}
 
@@ -192,7 +191,7 @@ function createMergeRequest(options){
 				if(match){
 					var projectName = match[1];
 				} else {
-					console.error('Remote at which ' + baseBranch + " is tracked, It's URL doesn't seem to end with .git . It is assumed that your remote URL will end with .git in this utility. ");
+					console.error(colors.red('Remote at which ' + baseBranch + " is tracked, It's URL doesn't seem to end with .git . It is assumed that your remote URL will end with .git in this utility. ") );
 					console.log('Please contact developer if this is a valid gitlab repository .');
 					process.exit(1);	
 				}
@@ -210,10 +209,10 @@ function createMergeRequest(options){
 							if(mergeRequestResponse.iid){
 								open(gitlabURL + "/" + projectName + "/merge_requests/" + mergeRequestResponse.iid);
 							} else {
-								console.error("Couldn't create pull request");
-								console.error("Possible problems are\n" +
+								console.error(colors.red("Couldn't create pull request"));
+								console.error(colors.red("Possible problems are\n" +
 									"1. Alredy merge request present for the same branches.\n" + 
-									"2. One of the branch is not present on remote")
+									"2. One of the branch is not present on remote"));
 							}
 						});
 					});

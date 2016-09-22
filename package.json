@@ -7,9 +7,10 @@
   "author": "",
   "license": "ISC",
   "bin": {
-    "gitlab-cli" : "index.js"
+    "gitlab-cli": "index.js"
   },
   "dependencies": {
+    "colors": "^1.1.2",
     "commander": "^2.9.0",
     "editor": "^1.0.0",
     "gitlab": "^1.7.1",
