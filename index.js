@@ -228,7 +228,26 @@ function createMergeRequest(options){
 program
   .version('0.0.1')
   .description('gitlab command line for creating merge request.')
-  
+ 
+if (!process.argv.slice(2).length) {
+  program.outputHelp();
+  process.exit(1);
+}
+
+var commandsSupported = [
+  'create-merge-request',
+  'browse',
+  'compare',
+  'open-merge-requests'
+];
+
+var command = process.argv.slice(2)[0];
+
+if(commandsSupported.indexOf(command.trim()) == -1){
+  console.error(( "Invalid command" + " " + command).red  );
+  program.outputHelp();
+}
+
 program
   .command('create-merge-request')
   .option('-b, --base [optional]','Base branch name')
