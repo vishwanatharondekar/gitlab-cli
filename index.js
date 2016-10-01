@@ -202,6 +202,8 @@ function createMergeRequest(options){
 					var targetBranch = options.target || defaultBranch;
 					var sourceBranch = baseBranch;
 					var projectId = project.id;
+					var labels = options.labels || "";
+					labels = labels.split(",");
 					var title = "";
 
 					getMergeRequestTitle(options.message).then(function(userMessage){
@@ -217,7 +219,8 @@ function createMergeRequest(options){
 							source_branch: sourceBranch,
 							target_branch: targetBranch,
 							title: title,
-							description : description
+							description : description,
+							labels : labels
 						})
 						.end(function(response){
 							var mergeRequestResponse = response.body;
@@ -278,6 +281,7 @@ program
   .option('-b, --base [optional]','Base branch name')
   .option('-t, --target [optional]','Target branch name')
   .option('-m, --message [optional]', 'Title of the merge request')
+  .option('-l --labels [optional]', 'Labels to assign while creating request')
   .description('Create merge request on gitlab')
   .action(function(options){
   	createMergeRequest(options);
