@@ -49,12 +49,16 @@ Above will create pull request for merging feature/feature-name in develop.
     -b, --base [optional]     Base branch name
     -t, --target [optional]   Target branch name
     -m, --message [optional]  Title of the merge request
+    -l --labels [optional]    Comma separated list of labels to assign while creating request 
     
 ###Features supported 
 
 1. Base branch is optional. If base branch is not provided. Current branch is used as base branch.
 2. target branch is optional. If target branch is not provided, default branch of the repo in gitlab will be used.
 3. Created pull request page will be opened automatically after successful creation.
+4. If title is not supported with -m option value. It will be taken from in place editor opened. First line is taken as title.
+5. In the editor opened third line onwards takes as description.
+6. Comma separated list of labels can be provided with its option.
 
 
 ##TODO 
