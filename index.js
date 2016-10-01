@@ -8,6 +8,7 @@ var open = require("open");
 var Promise = require('promise');
 var URL = require('url');
 var colors = require('colors');
+var unirest = require('unirest');
 
 if(!process.env.GITLAB_URL){
 	console.error(colors.red('Env variable GITLAB_URL is not set. Please set env variable GITLAB_URL') );
@@ -192,7 +193,7 @@ function createMergeRequest(options){
 					var projectName = match[1];
 				} else {
 					console.error(colors.red('Remote at which ' + baseBranch + " is tracked, It's URL doesn't seem to end with .git . It is assumed that your remote URL will end with .git in this utility. ") );
-					console.log('Please contact developer if this is a valid gitlab repository .');
+					console.log('Please contact developer if this is a valid gitlab repository.');
 					process.exit(1);	
 				}
 
@@ -203,18 +204,42 @@ function createMergeRequest(options){
 					var projectId = project.id;
 					var title = "";
 
-					getMergeRequestTitle(options.message).then(function(title){
+					getMergeRequestTitle(options.message).then(function(userMessage){
 						
-						gitlab.projects.merge_requests.add(projectId, sourceBranch, targetBranch, 0, title, function(mergeRequestResponse){
+						var title = userMessage.split("\n")[0];
+						var description = userMessage.split("\n").slice(2).join("    \n")
+
+						var mergeRequestURL = gitlabURL + "/api/v3/projects/" + projectId + "/merge_requests";
+						unirest.post(mergeRequestURL)
+						.headers({ 'PRIVATE-TOKEN':  process.env.GITLAB_TOKEN})
+						.send({
+							id: projectId,
+							source_branch: sourceBranch,
+							target_branch: targetBranch,
+							title: title,
+							description : description
+						})
+						.end(function(response){
+							var mergeRequestResponse = response.body;
 							if(mergeRequestResponse.iid){
 								open(gitlabURL + "/" + projectName + "/merge_requests/" + mergeRequestResponse.iid);
-							} else {
+							}
+							if(mergeRequestResponse.message){
 								console.error(colors.red("Couldn't create pull request"));
-								console.error(colors.red("Possible problems are\n" +
-									"1. Alredy merge request present for the same branches.\n" + 
-									"2. One of the branch is not present on remote"));
+								console.log(colors.red(mergeRequestResponse.message.join()));
 							}
 						});
+
+						// gitlab.projects.merge_requests.add(projectId, sourceBranch, targetBranch, 0, title, function(mergeRequestResponse){
+						// 	console.log('arguments : ', arguments);
+						// 	if(mergeRequestResponse.iid){
+						// 		open(gitlabURL + "/" + projectName + "/merge_requests/" + mergeRequestResponse.iid);
+						// 	} else {
+						// 		console.error(colors.red("Couldn't create pull request"));
+						// 		console.error(colors.red("Possible problems are\n" +
+						// 			"1. Alredy merge request present for the same branches." ));
+						// 	}
+						// });
 					});
 
 				});
