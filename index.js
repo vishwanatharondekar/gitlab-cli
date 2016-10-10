@@ -224,7 +224,7 @@ function createMergeRequest(options){
 						.end(function(response){
 							var mergeRequestResponse = response.body;
 							if(mergeRequestResponse.iid){
-								open(gitlabURL + "/" + projectName + "/merge_requests/" + mergeRequestResponse.iid);
+								open(gitlabURL + "/" + projectName + "/merge_requests/" + mergeRequestResponse.iid + '/edit');
 							}
 							if(mergeRequestResponse.message){
 								console.error(colors.red("Couldn't create pull request"));
