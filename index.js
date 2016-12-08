@@ -8,7 +8,6 @@ var open = require("open");
 var Promise = require('promise');
 var URL = require('url');
 var colors = require('colors');
-var unirest = require('unirest');
 
 if(!process.env.GITLAB_URL){
 	console.error(colors.red('Env variable GITLAB_URL is not set. Please set env variable GITLAB_URL') );
@@ -211,37 +210,24 @@ function createMergeRequest(options){
 						var description = userMessage.split("\n").slice(2).join("    \n")
 
 						var mergeRequestURL = gitlabURL + "/api/v3/projects/" + projectId + "/merge_requests";
-						unirest.post(mergeRequestURL)
-						.headers({ 'PRIVATE-TOKEN':  process.env.GITLAB_TOKEN})
-						.send({
+						
+						gitlab.projects.post("projects/" + projectId + "/merge_requests", {
 							id: projectId,
 							source_branch: sourceBranch,
 							target_branch: targetBranch,
 							title: title,
 							description : description,
 							labels : labels
-						})
-						.end(function(response){
+						}, function(err, response, body){
 							var mergeRequestResponse = response.body;
 							if(mergeRequestResponse.iid){
-								open(gitlabURL + "/" + projectName + "/merge_requests/" + mergeRequestResponse.iid + '/edit');
+								open(gitlabURL + "/" + projectName + "/merge_requests/" + mergeRequestResponse.iid + (!!options.edit? '/edit' : '') );
 							}
 							if(mergeRequestResponse.message){
 								console.error(colors.red("Couldn't create pull request"));
 								console.log(colors.red(mergeRequestResponse.message.join()));
 							}
 						});
-
-						// gitlab.projects.merge_requests.add(projectId, sourceBranch, targetBranch, 0, title, function(mergeRequestResponse){
-						// 	console.log('arguments : ', arguments);
-						// 	if(mergeRequestResponse.iid){
-						// 		open(gitlabURL + "/" + projectName + "/merge_requests/" + mergeRequestResponse.iid);
-						// 	} else {
-						// 		console.error(colors.red("Couldn't create pull request"));
-						// 		console.error(colors.red("Possible problems are\n" +
-						// 			"1. Alredy merge request present for the same branches." ));
-						// 	}
-						// });
 					});
 
 				});
@@ -281,6 +267,7 @@ program
   .option('-t, --target [optional]','Target branch name')
   .option('-m, --message [optional]', 'Title of the merge request')
   .option('-l --labels [optional]', 'Comma separated list of labels to assign while creating merge request')
+  .option('-e, --edit [optional]', 'If supplied opens edit page of merge request. Opens merge request page otherwise')
   .description('Create merge request on gitlab')
   .action(function(options){
   	createMergeRequest(options);
