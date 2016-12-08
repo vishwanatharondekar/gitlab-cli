@@ -50,7 +50,7 @@ Above will create pull request for merging feature/feature-name in develop.
     -t, --target [optional]   Target branch name
     -m, --message [optional]  Title of the merge request
     -l --labels [optional]    Comma separated list of labels to assign while creating request 
-    
+    -e, --edit [optional]     If supplied opens edit page of merge request. Opens merge request page otherwise
 ###Features supported 
 
 1. Base branch is optional. If base branch is not provided. Current branch is used as base branch.
