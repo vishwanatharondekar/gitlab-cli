@@ -17,7 +17,7 @@ Find your gitlab token at [http://gitlab.yourcompany.com/profile/account](http:/
 
 ## Usage
 
-    gitlab command [options]
+    gitlab-cli command [options]
 
 To get a list of available commands
 
