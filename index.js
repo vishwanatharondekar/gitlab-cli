@@ -42,7 +42,7 @@ function getMergeRequestTitle(title){
 			});
 	  	}
 	});
-	return promise;	
+	return promise;
 }
 
 function getBaseBranchName(baseBranchName){
@@ -56,7 +56,7 @@ function getBaseBranchName(baseBranchName){
 			});
 	  	}
 	});
-	return promise;	
+	return promise;
 }
 
 function getRemoteForBranch(branchName){
@@ -65,7 +65,7 @@ function getRemoteForBranch(branchName){
 	  		resolve(remote.trim());
 	  	});
 	});
-	return promise;	
+	return promise;
 }
 
 function getURLOfRemote(remote){
@@ -74,7 +74,7 @@ function getURLOfRemote(remote){
 	  		resolve(remoteURL);
 	  	});
 	});
-	return promise;	
+	return promise;
 }
 
 function getProjectInfo(projectName){
@@ -83,7 +83,7 @@ function getProjectInfo(projectName){
 			resolve(project);
 		});
 	});
-	return promise;	
+	return promise;
 }
 
 function browse(options){
@@ -97,7 +97,7 @@ function browse(options){
 
 			getURLOfRemote(remote).then(function(remoteURL){
 
-				//TODO : Check if remoteURL points to a gitlab repo or not. Throw error if not a gitlab repo.			
+				//TODO : Check if remoteURL points to a gitlab repo or not. Throw error if not a gitlab repo.
 				var regexParseProjectName = new RegExp(".+[:/](.+\/.+)\.git");
 				var projectName = remoteURL.match(regexParseProjectName)[1];
 
@@ -118,12 +118,12 @@ function compare(options){
 				console.error(colors.red( 'Branch ' + baseBranch + " is not tracked by any remote branch." ) );
 				console.log('Set the remote tracking by `git remote git branch --set-upstream <branch-name> <remote-name>/<branch-name>`');
 				console.log('Eg: `git branch --set-upstream foo upstream/foo`')
-				process.exit(1);				
+				process.exit(1);
 			}
 
 			getURLOfRemote(remote).then(function(remoteURL){
 
-				//TODO : Check if remoteURL points to a gitlab repo or not. Throw error if not a gitlab repo.			
+				//TODO : Check if remoteURL points to a gitlab repo or not. Throw error if not a gitlab repo.
 				var regexParseProjectName = new RegExp(".+[:/](.+\/.+)\.git");
 
 				var projectName = remoteURL.match(regexParseProjectName)[1];
@@ -148,12 +148,12 @@ function openMergeRequests(options){
 				console.error(colors.red('Branch ' + baseBranch + " is not tracked by any remote branch.") );
 				console.log('Set the remote tracking by `git remote git branch --set-upstream <branch-name> <remote-name>/<branch-name>`');
 				console.log('Eg: `git branch --set-upstream foo upstream/foo`')
-				process.exit(1);				
+				process.exit(1);
 			}
 
 			getURLOfRemote(remote).then(function(remoteURL){
 
-				//TODO : Check if remoteURL points to a gitlab repo or not. Throw error if not a gitlab repo.			
+				//TODO : Check if remoteURL points to a gitlab repo or not. Throw error if not a gitlab repo.
 				var regexParseProjectName = new RegExp(".+[:/](.+\/.+)\.git");
 				var projectName = remoteURL.match(regexParseProjectName)[1];
 
@@ -173,7 +173,7 @@ function createMergeRequest(options){
 				console.error(colors.red('Branch ' + baseBranch + " is not tracked by any remote branch." ));
 				console.log('Set the remote tracking by `git remote git branch --set-upstream <branch-name> <remote-name>/<branch-name>`');
 				console.log('Eg: `git branch --set-upstream foo upstream/foo`');
-				process.exit(1);				
+				process.exit(1);
 			}
 
 			getURLOfRemote(remote).then(function(remoteURL){
@@ -183,7 +183,7 @@ function createMergeRequest(options){
 
 				if(remoteURL.indexOf(gitlabHost)== -1 ){
 					console.error(colors.red('Remote at which ' + baseBranch + " is tracked is not a gitlab repository at " + gitlabURL ));
-					process.exit(1);	
+					process.exit(1);
 				}
 
 
@@ -193,7 +193,7 @@ function createMergeRequest(options){
 				} else {
 					console.error(colors.red('Remote at which ' + baseBranch + " is tracked, It's URL doesn't seem to end with .git . It is assumed that your remote URL will end with .git in this utility. ") );
 					console.log('Please contact developer if this is a valid gitlab repository.');
-					process.exit(1);	
+					process.exit(1);
 				}
 
 				gitlab.projects.show(projectName, function(project){
@@ -203,35 +203,48 @@ function createMergeRequest(options){
 					var projectId = project.id;
 					var labels = options.labels || "";
 					var title = "";
-
-					getMergeRequestTitle(options.message).then(function(userMessage){
-						
-						var title = userMessage.split("\n")[0];
-						var description = userMessage.split("\n").slice(2).join("    \n")
-
-						var mergeRequestURL = gitlabURL + "/api/v3/projects/" + projectId + "/merge_requests";
-						
-						gitlab.projects.post("projects/" + projectId + "/merge_requests", {
-							id: projectId,
-							source_branch: sourceBranch,
-							target_branch: targetBranch,
-							title: title,
-							description : description,
-							labels : labels
-						}, function(err, response, body){
-							var mergeRequestResponse = response.body;
-							if(mergeRequestResponse.iid){
-								open(gitlabURL + "/" + projectName + "/merge_requests/" + mergeRequestResponse.iid + (!!options.edit? '/edit' : '') );
+					getRemoteForBranch(targetBranch).then(function(targetRemote){
+						getURLOfRemote(targetRemote).then(function(targetRemoteUrl){
+							var targetMatch = targetRemoteUrl.match(regexParseProjectName);
+							if(targetMatch){
+								var targetProjectName = targetMatch[1];
+							} else {
+								console.error(colors.red('Remote at which ' + targetBranch + " is tracked, It's URL doesn't seem to end with .git . It is assumed that your remote URL will end with .git in this utility. ") );
+								console.log('Please contact developer if this is a valid gitlab repository.');
+								process.exit(1);
 							}
-							if(mergeRequestResponse.message){
-								console.error(colors.red("Couldn't create pull request"));
-								console.log(colors.red(mergeRequestResponse.message.join()));
-							}
+							gitlab.projects.show(targetProjectName, function(targetProject){
+								var targetProjectId = targetProject.id;
+
+								getMergeRequestTitle(options.message).then(function(userMessage){
+
+									var title = userMessage.split("\n")[0];
+									var description = userMessage.split("\n").slice(2).join("    \n")
+
+									var mergeRequestURL = gitlabURL + "/api/v3/projects/" + projectId + "/merge_requests";
+									gitlab.projects.post("projects/" + projectId + "/merge_requests", {
+										id: projectId,
+										source_branch: sourceBranch,
+										target_branch: targetBranch,
+										title: title,
+										description : description,
+										labels : labels,
+										target_project_id: targetProjectId
+									}, function(err, response, body){
+										var mergeRequestResponse = response.body;
+										if(mergeRequestResponse.iid){
+											open(gitlabURL + "/" + targetProjectName + "/merge_requests/" + mergeRequestResponse.iid + (!!options.edit? '/edit' : ''));
+										}
+										if(mergeRequestResponse.message){
+											console.error(colors.red("Couldn't create pull request"));
+											console.log(colors.red(mergeRequestResponse.message.join()));
+										}
+									});
+								});
+							});
 						});
 					});
-
 				});
-
 			});
 		});
 	});
@@ -241,7 +254,7 @@ function createMergeRequest(options){
 program
   .version('0.0.1')
   .description('gitlab command line for creating merge request.')
- 
+
 if (!process.argv.slice(2).length) {
   program.outputHelp();
   process.exit(1);
