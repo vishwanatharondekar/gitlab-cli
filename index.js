@@ -34,12 +34,14 @@ function getMergeRequestTitle(title){
 	  	if(title){
 	  		resolve(title);
 	  	} else {
+      exec('git log -1 --pretty=%B > .git/PULL_REQUEST_TITLE',  function(error, remote, stderr){
 			editor('.git/PULL_REQUEST_TITLE',  function (code, sig) {
 			    fs.readFile('.git/PULL_REQUEST_TITLE', 'utf8', function(err, data){
 			    	title = data;
 			    	resolve(title);
 			    });
 			});
+    });
 	  	}
 	});
 	return promise;
