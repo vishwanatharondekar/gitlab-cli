@@ -29,20 +29,21 @@ var gitlab = require('gitlab')({
   token: process.env.GITLAB_TOKEN
 });
 
-function getMergeRequestTitle(title) {
+function getMergeRequestTitle(title){
   var promise = new Promise(function (resolve, reject) {
-    if (title) {
-      resolve(title);
-    } else {
-      editor('.git/PULL_REQUEST_TITLE', function (code, sig) {
-        fs.readFile('.git/PULL_REQUEST_TITLE', 'utf8', function (err, data) {
-          title = data;
-          resolve(title);
+      if(title){
+        resolve(title);
+      } else {
+      exec('git log -1 --pretty=%B > .git/PULL_REQUEST_TITLE',  function(error, remote, stderr){
+        editor('.git/PULL_REQUEST_TITLE',  function (code, sig) {
+          fs.readFile('.git/PULL_REQUEST_TITLE', 'utf8', function(err, data){
+            title = data;
+            resolve(title);
+          });
         });
       });
     }
   });
-  return promise;
 }
 
 function getBaseBranchName(baseBranchName) {
