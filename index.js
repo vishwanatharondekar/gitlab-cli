@@ -44,6 +44,7 @@ function getMergeRequestTitle(title){
       });
     }
   });
+  return promise;
 }
 
 function getBaseBranchName(baseBranchName) {
