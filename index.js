@@ -71,7 +71,7 @@ function getBaseBranchName(baseBranchName) {
   var promise = new Promise(function (resolve, reject) {
     if (baseBranchName) {
       logger.log('Argument provided : ' + baseBranchName);
-      logger.log('Base branch name obtained :', curBranchName.green);
+      logger.log('Base branch name obtained :', baseBranchName.green);
       resolve(baseBranchName);
     } else {
 
