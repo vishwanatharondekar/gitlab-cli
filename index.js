@@ -135,6 +135,8 @@ function getProjectInfo(projectName) {
 }
 
 function browse(options) {
+  logger = log.getInstance(options.verbose);
+
   getBaseBranchName().then(function (curBranchName) {
     getRemoteForBranch(curBranchName).then(function (remote) {
       if (!remote) {
@@ -157,6 +159,7 @@ function browse(options) {
 }
 
 function compare(options) {
+  logger = log.getInstance(options.verbose);
 
   getBaseBranchName(options.base).then(function (baseBranch) {
 
@@ -189,6 +192,7 @@ function compare(options) {
 }
 
 function openMergeRequests(options) {
+  logger = log.getInstance(options.verbose);
   getBaseBranchName(options.base).then(function (baseBranch) {
     getRemoteForBranch(baseBranch).then(function (remote) {
 
