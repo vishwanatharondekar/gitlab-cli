@@ -41,6 +41,8 @@ var log = {
   }
 }
 
+var allRemotes = null;
+
 //Will be assigned value after parsing of options
 var logger = null;
 
@@ -66,15 +68,64 @@ function getMergeRequestTitle(title){
   return promise;
 }
 
+function getAllRemotes(){
+  var promise = new Promise(function (resolve, reject) {
+    if(allRemotes){
+      resolve(allRemotes);
+      return;
+    }
+
+    exec('git remote', { cwd: projectDir }, function (error, allRemotes, stderr) {
+      if(error){
+        logger.log(colors.red('Error occured :\n') , colors.red(error));
+        process.exit(1);;
+      }
+
+      allRemotes = allRemotes.split('\n');
+      resolve(allRemotes);
+    });
+  });
+  return promise;
+}
+
+function parseBranchRemoteInfo(branchName){
+  var promise = new Promise(function (resolve, reject) {
+
+    if(branchName.indexOf('/')!=-1){
+      getAllRemotes().then(function(allRemotes){
+        var splits = branchName.split('/');
+        var maybeRemote = splits[0].trim();
+        var remoteName = null;
+        if(allRemotes.indexOf(maybeRemote)){
+          branchName = splits[1];
+          remoteName = maybeRemote;
+        }
+        logger.log('Branch name obtained :', branchName.green);
+        resolve({
+          branch : branchName,
+          remote : remoteName
+        })
+      });
+    } else {
+      resolve({
+        branch : branchName,
+      });
+    }
+  });
+  return promise;
+}
+
 function getBaseBranchName(baseBranchName) {
-  logger.log('\nGetting base branch name');
+  logger.log('\nGetting base branch name : ');
   var promise = new Promise(function (resolve, reject) {
     if (baseBranchName) {
       logger.log('Argument provided : ' + baseBranchName);
-      logger.log('Base branch name obtained :', baseBranchName.green);
-      resolve(baseBranchName);
-    } else {
 
+      parseBranchRemoteInfo(baseBranchName).then(function(branchRemoteInfo){
+        logger.log('Base branch name obtained :', branchRemoteInfo.branch.green);
+        resolve(branchRemoteInfo.branch);
+      });
+    } else {
       logger.log('Executing git rev-parse --abbrev-ref HEAD');
 
       exec('git rev-parse --abbrev-ref HEAD', { cwd: projectDir }, function (error, stdout, stderr) {
@@ -82,7 +133,7 @@ function getBaseBranchName(baseBranchName) {
           logger.log(colors.red('Error occured :\n') , colors.red(error));
           process.exit(1);;
         }
-        var curBranchName = stdout.replace('\n', '');
+        curBranchName = stdout.replace('\n', '');
         logger.log('Base branch name obtained :', curBranchName.green);
         resolve(curBranchName);
       });
@@ -91,17 +142,38 @@ function getBaseBranchName(baseBranchName) {
   return promise;
 }
 
+function getTargetBranchName(branchName){
+  var promise = new Promise(function (resolve, reject) {
+    parseBranchRemoteInfo(branchName).then(function(branchRemoteInfo){
+      logger.log('Remote branch name obtained :', branchRemoteInfo.branch.green);
+      resolve(branchRemoteInfo.branch);
+    });
+  });
+  return promise;
+}
+
 function getRemoteForBranch(branchName) {
   logger.log('\nGetting remote of branch  :', branchName);
+
   var promise = new Promise(function (resolve, reject) {
-    logger.log('Executing ', 'git config branch.' + branchName.trim() + '.remote');
-    exec('git config branch.' + branchName.trim() + '.remote', { cwd: projectDir }, function (error, remote, stderr) {
-      if(error){
-          console.error(colors.red('Error occured :\n') , colors.red(error));
-          process.exit(1);;
+
+    parseBranchRemoteInfo(branchName).then(function(branchRemoteInfo){
+      if(branchRemoteInfo.remote){
+        //Remote info supplied in the branch name
+        logger.log('Remote obtained : ', branchRemoteInfo.remote.green);
+        resolve(branchRemoteInfo.remote)
+      } else {
+        //Remote info is not supplied. Get it from remote set
+        logger.log('Executing git config branch.' + branchName.trim() + '.remote');
+        exec('git config branch.' + branchName.trim() + '.remote', { cwd: projectDir }, function (error, remote, stderr) {
+          if(error){
+            console.error(colors.red('Error occured :\n') , colors.red(error));
+            process.exit(1);
+          }
+          logger.log('Remote obtained : ', remote.green);
+          resolve(remote.trim());
+        });
       }
-      logger.log('Remote obtained : ', remote.green);
-      resolve(remote.trim());
     });
   });
   return promise;
@@ -116,7 +188,7 @@ function getURLOfRemote(remote) {
           console.error(colors.red('Error occured :\n') , colors.red(error));
           process.exit(1);
       }
-      logger.log('URL of remote obtainec : ', remoteURL.green)
+      logger.log('URL of remote obtained : ', remoteURL.green)
       resolve(remoteURL);
     });
   });
@@ -219,13 +291,13 @@ function createMergeRequest(options) {
 
   logger = log.getInstance(options.verbose);
   if(options.verbose){
-    logger.log('verbose option used. Detailed logging information will be emitted.'.green)
+    logger.log('verbose option used. Detailed logging information will be emitted.'.green);
   }
 
   logger.log('\n\n\nGetting base branch information'.blue);
   getBaseBranchName(options.base).then(function (baseBranch) {
 
-    getRemoteForBranch(baseBranch).then(function (remote) {
+    getRemoteForBranch(options.base || baseBranch).then(function (remote) {
 
       if (!remote) {
         console.error(colors.red('Branch ' + baseBranch + " is not tracked by any remote branch."));
@@ -261,6 +333,10 @@ function createMergeRequest(options) {
         logger.log('\nGetting gitlab project info for :', projectName);
         gitlab.projects.show(projectName, function (project) {
           logger.log('Base project info obtained :', JSON.stringify(project).green);
+
+
+
+
           var defaultBranch = project.default_branch;
           var targetBranch = options.target || defaultBranch;
           var sourceBranch = baseBranch;
@@ -269,52 +345,68 @@ function createMergeRequest(options) {
           var title = "";
 
           logger.log('\n\n\nGetting target branch information'.blue);
-          getRemoteForBranch(targetBranch).then(function (targetRemote) {
-            getURLOfRemote(targetRemote).then(function (targetRemoteUrl) {
-              var targetMatch = targetRemoteUrl.match(regexParseProjectName);
-              if (targetMatch) {
-                var targetProjectName = targetMatch[1];
-              } else {
-                console.error(colors.red('Remote at which ' + targetBranch + " is tracked, It's URL doesn't seem to end with .git . It is assumed that your remote URL will end with .git in this utility. "));
-                console.log('Please contact developer if this is a valid gitlab repository.');
-                process.exit(1);
-              }
 
-              logger.log('Getting target project information');
-              gitlab.projects.show(targetProjectName, function (targetProject) {
-                logger.log('Target project info obtained :', JSON.stringify(targetProject).green);
-                var targetProjectId = targetProject.id;
+          getTargetBranchName(options.target || targetBranch).then(function(targetBranch){
+            getRemoteForBranch(options.target || targetBranch).then(function (targetRemote) {
+              getURLOfRemote(targetRemote).then(function (targetRemoteUrl) {
+                var targetMatch = targetRemoteUrl.match(regexParseProjectName);
+                if (targetMatch) {
+                  var targetProjectName = targetMatch[1];
+                } else {
+                  console.error(colors.red('Remote at which ' + targetBranch + " is tracked, It's URL doesn't seem to end with .git . It is assumed that your remote URL will end with .git in this utility. "));
+                  console.log('Please contact developer if this is a valid gitlab repository.');
+                  process.exit(1);
+                }
 
-                getMergeRequestTitle(options.message).then(function (userMessage) {
+                logger.log('Getting target project information');
+                gitlab.projects.show(targetProjectName, function (targetProject) {
+                  logger.log('Target project info obtained :', JSON.stringify(targetProject).green);
+                  var targetProjectId = targetProject.id;
 
-                  var title = userMessage.split("\n")[0];
-                  var description = userMessage.split("\n").slice(2).join("    \n");
-
-                  logger.log('Merge request title : ', title.green);
-                  if(description){
-                    logger.log('Merge request description : ', description.green);
+                  if(sourceBranch==targetBranch && projectId==targetProjectId){
+                    console.error(colors.red("\nCan not create this merge request"));
+                    console.log(colors.red("You can not use same project/branch for source and target"));
+                    process.exit(1);
                   }
 
-                  logger.log('\n\nCreating merge request'.blue)
 
-                  var mergeRequestURL = gitlabURL + "/api/v3/projects/" + projectId + "/merge_requests";
-                  gitlab.projects.post("projects/" + projectId + "/merge_requests", {
-                    id: projectId,
-                    source_branch: sourceBranch,
-                    target_branch: targetBranch,
-                    title: title,
-                    description: description,
-                    labels: labels,
-                    target_project_id: targetProjectId
-                  }, function (err, response, body) {
-                    var mergeRequestResponse = response.body;
-                    if (mergeRequestResponse.iid) {
-                      open(gitlabURL + "/" + targetProjectName + "/merge_requests/" + mergeRequestResponse.iid + (!!options.edit ? '/edit' : ''));
+                  getMergeRequestTitle(options.message).then(function (userMessage) {
+
+                    var title = userMessage.split("\n")[0];
+                    var description = userMessage.split("\n").slice(2).join("    \n");
+
+                    logger.log('Merge request title : ', title.green);
+                    if(description){
+                      logger.log('Merge request description : ', description.green);
                     }
-                    if (mergeRequestResponse.message) {
-                      console.error(colors.red("Couldn't create pull request"));
-                      console.log(colors.red(mergeRequestResponse.message.join()));
-                    }
+
+                    logger.log('\n\nCreating merge request'.blue)
+
+                    var mergeRequestURL = gitlabURL + "/api/v3/projects/" + projectId + "/merge_requests";
+                    gitlab.projects.post("projects/" + projectId + "/merge_requests", {
+                      id: projectId,
+                      source_branch: sourceBranch,
+                      target_branch: targetBranch,
+                      title: title,
+                      description: description,
+                      labels: labels,
+                      target_project_id: targetProjectId
+                    }, function (err, response, body) {
+                      var mergeRequestResponse = response.body;
+                      console.log('mergeRequestResponse : ', mergeRequestResponse);
+                      if (mergeRequestResponse.iid) {
+                        open(gitlabURL + "/" + targetProjectName + "/merge_requests/" + mergeRequestResponse.iid + (!!options.edit ? '/edit' : ''));
+                        return;
+                      }
+                      if (mergeRequestResponse.message) {
+                        console.error(colors.red("Couldn't create merge request"));
+                        console.log(colors.red(mergeRequestResponse.message.join()));
+                      }
+                      if(mergeRequestResponse instanceof Array){
+                        console.error(colors.red("Couldn't create merge request"));
+                        console.log(colors.red(mergeRequestResponse.join()));
+                      }
+                    });
                   });
                 });
               });
