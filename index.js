@@ -96,8 +96,8 @@ function parseBranchRemoteInfo(branchName){
         var splits = branchName.split('/');
         var maybeRemote = splits[0].trim();
         var remoteName = null;
-        if(allRemotes.indexOf(maybeRemote)){
-          branchName = splits[1];
+        if(allRemotes.indexOf(maybeRemote) != -1){
+          branchName = splits.slice(1).join("/");
           remoteName = maybeRemote;
         }
         logger.log('Branch name obtained :', branchName.green);
@@ -154,6 +154,7 @@ function getTargetBranchName(branchName){
 
 function getRemoteForBranch(branchName) {
   logger.log('\nGetting remote of branch  :', branchName);
+
 
   var promise = new Promise(function (resolve, reject) {
 
