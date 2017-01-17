@@ -458,6 +458,7 @@ program
 
 program
   .command('browse')
+  .option('-v, --verbose [optional]', 'Detailed logging emitted on console for debug purpose')
   .description('Open current branch page in gitlab')
   .action(function (options) {
     browse(options);
@@ -467,6 +468,7 @@ program
   .command('compare')
   .option('-b, --base [optional]', 'Base branch name')
   .option('-t, --target [optional]', 'Target branch name')
+  .option('-v, --verbose [optional]', 'Detailed logging emitted on console for debug purpose')
   .description('Open compare page between two branches')
   .action(function (options) {
     compare(options);
@@ -474,6 +476,7 @@ program
 
 program
   .command('open-merge-requests')
+  .option('-v, --verbose [optional]', 'Detailed logging emitted on console for debug purpose')
   .description('Opens merge request page for the repo.')
   .action(function (options) {
     openMergeRequests(options);
