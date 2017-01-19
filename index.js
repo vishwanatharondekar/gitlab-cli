@@ -394,7 +394,6 @@ function createMergeRequest(options) {
                       target_project_id: targetProjectId
                     }, function (err, response, body) {
                       var mergeRequestResponse = response.body;
-                      console.log('mergeRequestResponse : ', mergeRequestResponse);
                       if (mergeRequestResponse.iid) {
                         open(gitlabURL + "/" + targetProjectName + "/merge_requests/" + mergeRequestResponse.iid + (!!options.edit ? '/edit' : ''));
                         return;
