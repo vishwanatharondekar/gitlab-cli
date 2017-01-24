@@ -21,7 +21,6 @@ if (!process.env.GITLAB_TOKEN) {
   process.exit(1);
 }
 
-console.log('Using local')
 var projectDir = process.cwd();
 var gitlabURL = process.env.GITLAB_URL;
 
