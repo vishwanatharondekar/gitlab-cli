@@ -21,6 +21,7 @@ if (!process.env.GITLAB_TOKEN) {
   process.exit(1);
 }
 
+console.log('Using local')
 var projectDir = process.cwd();
 var gitlabURL = process.env.GITLAB_URL;
 
@@ -369,7 +370,6 @@ function createMergeRequest(options) {
                     console.log(colors.red("You can not use same project/branch for source and target"));
                     process.exit(1);
                   }
-
 
                   getMergeRequestTitle(options.message).then(function (userMessage) {
 
