@@ -115,6 +115,7 @@ function parseBranchRemoteInfo(branchName){
   return promise;
 }
 
+
 function getBaseBranchName(baseBranchName) {
   logger.log('\nGetting base branch name : ');
   var promise = new Promise(function (resolve, reject) {
@@ -264,28 +265,41 @@ function compare(options) {
   });
 }
 
+function getRemote(options){
+  logger.log('\nGetting remote for options provided : ', options.remote);
+  var promise = new Promise(function (resolve, reject) {
+    if(options.remote){
+      resolve(options.remote)
+      return;
+    }
+
+    getBaseBranchName(options.base).then(function (baseBranch) {
+      getRemoteForBranch(baseBranch).then(function (remote) {
+        resolve(remote)
+      })
+    })
+  });
+  return promise;
+}
+
 function openMergeRequests(options) {
   logger = log.getInstance(options.verbose);
-  getBaseBranchName(options.base).then(function (baseBranch) {
-    getRemoteForBranch(baseBranch).then(function (remote) {
+  getRemote(options).then(function(remote){
 
-      if (!remote) {
-        console.error(colors.red('Branch ' + baseBranch + " is not tracked by any remote branch."));
-        console.log('Set the remote tracking by `git remote git branch --set-upstream <branch-name> <remote-name>/<branch-name>`');
-        console.log('Eg: `git branch --set-upstream foo upstream/foo`')
-        process.exit(1);
-      }
+    if (!remote) {
+      console.error(colors.red('Branch ' + baseBranch + " is not tracked by any remote branch."));
+      console.log('Set the remote tracking by `git remote git branch --set-upstream <branch-name> <remote-name>/<branch-name>`');
+      console.log('Eg: `git branch --set-upstream foo upstream/foo`')
+      process.exit(1);
+    }
 
-      getURLOfRemote(remote).then(function (remoteURL) {
-
-        //TODO : Check if remoteURL points to a gitlab repo or not. Throw error if not a gitlab repo.
-        var regexParseProjectName = new RegExp(".+[:/](.+\/.+)\.git");
-        var projectName = remoteURL.match(regexParseProjectName)[1];
-
-        open(gitlabURL + "/" + projectName + "/merge_requests");
-      });
+    getURLOfRemote(remote).then(function (remoteURL) {
+      //TODO : Check if remoteURL points to a gitlab repo or not. Throw error if not a gitlab repo.
+      var regexParseProjectName = new RegExp(".+[:/](.+\/.+)\.git");
+      var projectName = remoteURL.match(regexParseProjectName)[1];
+      open(gitlabURL + "/" + projectName + "/merge_requests");
     });
-  });
+  })
 }
 
 function createMergeRequest(options) {
@@ -477,6 +491,7 @@ program
 program
   .command('open-merge-requests')
   .option('-v, --verbose [optional]', 'Detailed logging emitted on console for debug purpose')
+  .option('-r, --remote [optional]', 'If provided this will be used as remote')
   .description('Opens merge request page for the repo.')
   .action(function (options) {
     openMergeRequests(options);
