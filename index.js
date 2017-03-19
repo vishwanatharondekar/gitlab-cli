@@ -46,23 +46,26 @@ var allRemotes = null;
 //Will be assigned value after parsing of options
 var logger = null;
 
-
 function getMergeRequestTitle(title){
   logger.log('\nGetting merge request title. Argument provided : ', title);
   var promise = new Promise(function (resolve, reject) {
-      if(title){
-        logger.log('Title obtained with -m option: ', title.green);
-        resolve(title);
-      } else {
-      exec('git log -1 --pretty=%B > .git/PULL_REQUEST_TITLE',  function(error, remote, stderr){
-        editor('.git/PULL_REQUEST_TITLE',  function (code, sig) {
-          fs.readFile('.git/PULL_REQUEST_TITLE', 'utf8', function(err, data){
-            title = data;
-            logger.log('Input obtained using editor: ', title.green);
-            resolve(title);
+    if(title){
+      logger.log('Title obtained with -m option: ', title.green);
+      resolve(title);
+    } else {
+
+      exec('git rev-parse --show-toplevel', function(error, repoDir, stderr){
+        var filePath = repoDir.trim() + '/.git/PULL_REQUEST_TITLE';
+        exec('git log -1 --pretty=%B > ' + filePath,  function(error, remote, stderr){
+          editor(filePath,  function (code, sig) {
+            fs.readFile(filePath, 'utf8', function(err, data){
+              title = data;
+              logger.log('Input obtained using editor: ', title.green);
+              resolve(title);
+            });
           });
         });
-      });
+      })
     }
   });
   return promise;
