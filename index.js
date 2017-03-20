@@ -17,7 +17,7 @@ if (!process.env.GITLAB_URL) {
 
 if (!process.env.GITLAB_TOKEN) {
   console.error(colors.red('Please set env variable GITLAB_TOKEN'));
-  console.error('Find your token at http://gitlab.yourcompany.com/profile/account');
+  console.error('Find your token at ' + process.env.GITLAB_URL + '/profile/account');
   process.exit(1);
 }
 
