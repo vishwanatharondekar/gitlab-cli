@@ -410,7 +410,12 @@ function createMergeRequest(options) {
                       logger.log('Merge request response : \n\n', mergeRequestResponse);
 
                       if (mergeRequestResponse.iid) {
-                        open(gitlabURL + "/" + targetProjectName + "/merge_requests/" + mergeRequestResponse.iid + (!!options.edit ? '/edit' : ''));
+                        var mergeRequestUrl = mergeRequestResponse.web_url + (!!options.edit ? '/edit' : '');
+                        if (options.print) {
+                          console.log(mergeRequestUrl);
+                        } else {
+                          open(mergeRequestUrl);
+                        }
                         return;
                       }
                       if (mergeRequestResponse.message) {
@@ -464,6 +469,7 @@ program
   .option('-m, --message [optional]', 'Title of the merge request')
   .option('-l --labels [optional]', 'Comma separated list of labels to assign while creating merge request')
   .option('-e, --edit [optional]', 'If supplied opens edit page of merge request. Opens merge request page otherwise')
+  .option('-p, --print [optional]', 'If supplied print the url of the merge request. Opens merge request page otherwise')
   .option('-v, --verbose [optional]', 'Detailed logging emitted on console for debug purpose')
   .description('Create merge request on gitlab')
   .action(function (options) {
