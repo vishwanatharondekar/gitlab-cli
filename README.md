@@ -52,7 +52,7 @@ Above will create pull request for merging feature/feature-name in develop.
     -e, --edit [optional]     If supplied opens edit page of merge request. Opens merge request page otherwise
     -v, --verbose [optional]  Detailed logging emitted on console for debug purpose
 
-###Features supported 
+### Features supported 
 
 1. Base branch is optional. If base branch is not provided. Current branch is used as base branch.
 2. Target branch is optional. If target branch is not provided, default branch of the repo in gitlab will be used. 
