@@ -415,7 +415,7 @@ function createMergeRequest(options) {
                       if (mergeRequestResponse.iid) {
                         var urlToOpen = mergeRequestResponse.web_url;
                         if(!urlToOpen){
-                          urlToOpen = gitlabURL + "/" + targetProjectName + "/" + "/merge_requests/" + mergeRequestResponse.iid
+                          urlToOpen = gitlabURL + "/" + targetProjectName + "/merge_requests/" + mergeRequestResponse.iid
                         }
 
                         var mergeRequestUrl = urlToOpen + (!!options.edit ? '/edit' : '');
