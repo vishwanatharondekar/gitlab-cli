@@ -413,7 +413,12 @@ function createMergeRequest(options) {
                       logger.log('Merge request response : \n\n', mergeRequestResponse);
 
                       if (mergeRequestResponse.iid) {
-                        var mergeRequestUrl = mergeRequestResponse.web_url + (!!options.edit ? '/edit' : '');
+                        var urlToOpen = mergeRequestResponse.web_url;
+                        if(!urlToOpen){
+                          urlToOpen = gitlabURL + "/" + targetProjectName + "/" + "/merge_requests/" + mergeRequestResponse.iid
+                        }
+
+                        var mergeRequestUrl = urlToOpen + (!!options.edit ? '/edit' : '');
                         if (options.print) {
                           console.log(mergeRequestUrl);
                         } else {
