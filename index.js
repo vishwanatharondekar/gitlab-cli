@@ -409,8 +409,9 @@ function createMergeRequest(options) {
                       labels: labels,
                       target_project_id: targetProjectId
                     }, function (err, response, body) {
+                      logger.log('Merge request response : \n\n', response);
                       var mergeRequestResponse = response.body;
-                      logger.log('Merge request response : \n\n', mergeRequestResponse);
+                      logger.log('Merge request response body: \n\n', mergeRequestResponse);
 
                       if (mergeRequestResponse.iid) {
                         var urlToOpen = mergeRequestResponse.web_url;
