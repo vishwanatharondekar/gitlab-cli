@@ -1,5 +1,5 @@
 {
-  "name": "gitlab-cli",
+  "name": "git-lab-cli",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -7,7 +7,8 @@
   "author": "",
   "license": "ISC",
   "bin": {
-    "gitlab-cli": "index.js"
+    "gitlab-cli": "index.js",
+    "git-lab": "index.js"
   },
   "dependencies": {
     "colors": "^1.1.2",
