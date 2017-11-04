@@ -285,6 +285,28 @@ function getRemote(options){
   return promise;
 }
 
+function getUserId(options){
+  logger.log('\nGetting userId for username : ', options.assignee);
+  var promise = new Promise(function (resolve, reject) {
+    if(!options.assignee){
+      resolve('')
+      return;
+    }
+
+    gitlab.users.search(options.assignee, function(userInfo){
+      if(userInfo instanceof Array &&  userInfo.length > 0){
+        var user = userInfo[0];
+        userId = user.id;
+        resolve(userId);
+      } else {
+        console.log('User with username "' + options.assignee + '" was not found. Please check the username and try again.')
+        process.exit(1);
+      }
+    })
+  });
+  return promise;
+}
+
 function openMergeRequests(options) {
   logger = log.getInstance(options.verbose);
   getRemote(options).then(function(remote){
@@ -300,10 +322,24 @@ function openMergeRequests(options) {
       //TODO : Check if remoteURL points to a gitlab repo or not. Throw error if not a gitlab repo.
       var regexParseProjectName = new RegExp(".+[:/](.+\/.+)\.git");
       var projectName = remoteURL.match(regexParseProjectName)[1];
-      open(gitlabURL + "/" + projectName + "/merge_requests");
+
+      var queryStringToAppend = "?";
+      if(options.state){
+        queryStringToAppend += "state="  + options.state + "&";
+      }
+
+
+      getUserId(options).then(function(userId){
+        if(userId){
+          queryStringToAppend += "assignee_id=" + userId + "&";
+        }
+        open(gitlabURL + "/" + projectName + "/merge_requests" + queryStringToAppend.slice(0, -1));
+      })
     });
   })
 }
+
+
 
 function createMergeRequest(options) {
 
@@ -507,6 +543,8 @@ program
   .command('open-merge-requests')
   .option('-v, --verbose [optional]', 'Detailed logging emitted on console for debug purpose')
   .option('-r, --remote [optional]', 'If provided this will be used as remote')
+  .option('-a, --assignee [optional]', 'If provided, merge requests assigned to only this user will be shown')
+  .option('-s, --state [optional]', 'If provide merge requests with state provided will be shown')
   .description('Opens merge request page for the repo.')
   .action(function (options) {
     openMergeRequests(options);
