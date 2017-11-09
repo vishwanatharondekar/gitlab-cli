@@ -8,6 +8,7 @@ var open = require("open");
 var Promise = require('promise');
 var URL = require('url');
 var colors = require('colors');
+var regexParseProjectName = /(.+:\/\/.+?\/|.+@.+:)(.+\/[\w]+)+.git/;
 
 if (!process.env.GITLAB_URL) {
   console.error(colors.red('Env variable GITLAB_URL is not set. Please set env variable GITLAB_URL'));
@@ -223,11 +224,7 @@ function browse(options) {
       }
 
       getURLOfRemote(remote).then(function (remoteURL) {
-
-        //TODO : Check if remoteURL points to a gitlab repo or not. Throw error if not a gitlab repo.
-        var regexParseProjectName = new RegExp(".+[:/](.+\/.+)\.git");
-        var projectName = remoteURL.match(regexParseProjectName)[1];
-
+        var projectName = remoteURL.match(regexParseProjectName)[2];
         open(gitlabURL + "/" + projectName + "/tree/" + curBranchName);
       });
 
@@ -251,10 +248,7 @@ function compare(options) {
 
       getURLOfRemote(remote).then(function (remoteURL) {
 
-        //TODO : Check if remoteURL points to a gitlab repo or not. Throw error if not a gitlab repo.
-        var regexParseProjectName = new RegExp(".+[:/](.+\/.+)\.git");
-
-        var projectName = remoteURL.match(regexParseProjectName)[1];
+        var projectName = remoteURL.match(regexParseProjectName)[2];
         gitlab.projects.show(projectName, function (project) {
           var defaultBranch = project.default_branch;
           var targetBranch = options.target || defaultBranch;
@@ -319,9 +313,7 @@ function openMergeRequests(options) {
     }
 
     getURLOfRemote(remote).then(function (remoteURL) {
-      //TODO : Check if remoteURL points to a gitlab repo or not. Throw error if not a gitlab repo.
-      var regexParseProjectName = new RegExp(".+[:/](.+\/.+)\.git");
-      var projectName = remoteURL.match(regexParseProjectName)[1];
+      var projectName = remoteURL.match(regexParseProjectName)[2];
 
       var queryStringToAppend = "?";
       if(options.state){
@@ -362,7 +354,6 @@ function createMergeRequest(options) {
 
       getURLOfRemote(remote).then(function (remoteURL) {
 
-        var regexParseProjectName = new RegExp(".+[:/](.+\/.+)\.git");
         var gitlabHost = URL.parse(gitlabURL).host;
 
         logger.log('\ngitlab host obtained : ', gitlabHost.green);
@@ -375,7 +366,7 @@ function createMergeRequest(options) {
 
         var match = remoteURL.match(regexParseProjectName);
         if (match) {
-          var projectName = match[1];
+          var projectName = match[2];
         } else {
           console.error(colors.red('Remote at which ' + baseBranch + " is tracked, It's URL doesn't seem to end with .git . It is assumed that your remote URL will end with .git in this utility. "));
           console.log('Please contact developer if this is a valid gitlab repository.');
@@ -387,9 +378,6 @@ function createMergeRequest(options) {
         logger.log('\nGetting gitlab project info for :', projectName);
         gitlab.projects.show(projectName, function (project) {
           logger.log('Base project info obtained :', JSON.stringify(project).green);
-
-
-
 
           var defaultBranch = project.default_branch;
           var targetBranch = options.target || defaultBranch;
@@ -405,7 +393,7 @@ function createMergeRequest(options) {
               getURLOfRemote(targetRemote).then(function (targetRemoteUrl) {
                 var targetMatch = targetRemoteUrl.match(regexParseProjectName);
                 if (targetMatch) {
-                  var targetProjectName = targetMatch[1];
+                  var targetProjectName = targetMatch[2];
                 } else {
                   console.error(colors.red('Remote at which ' + targetBranch + " is tracked, It's URL doesn't seem to end with .git . It is assumed that your remote URL will end with .git in this utility. "));
                   console.log('Please contact developer if this is a valid gitlab repository.');
