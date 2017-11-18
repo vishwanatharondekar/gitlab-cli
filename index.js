@@ -8,7 +8,7 @@ var open = require("open");
 var Promise = require('promise');
 var URL = require('url');
 var colors = require('colors');
-var regexParseProjectName = /(.+:\/\/.+?\/|.+@.+:)(.+\/[\w]+)+.git/;
+var regexParseProjectName = /(.+:\/\/.+?\/|.+:)(.+\/[\w]+)+.git/;
 
 if (!process.env.GITLAB_URL) {
   console.error(colors.red('Env variable GITLAB_URL is not set. Please set env variable GITLAB_URL'));
