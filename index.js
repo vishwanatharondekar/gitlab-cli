@@ -358,12 +358,6 @@ function createMergeRequest(options) {
 
         logger.log('\ngitlab host obtained : ', gitlabHost.green);
 
-        if (remoteURL.indexOf(gitlabHost) == -1) {
-          console.error(colors.red('Remote at which ' + baseBranch + " is tracked is not a gitlab repository at " + gitlabURL));
-          process.exit(1);
-        }
-
-
         var match = remoteURL.match(regexParseProjectName);
         if (match) {
           var projectName = match[2];
