@@ -471,21 +471,6 @@ program
   .description('gitlab command line for creating merge request.')
 
 program
-  .command('create-merge-request')
-  .option('-b, --base [optional]', 'Base branch name')
-  .option('-t, --target [optional]', 'Target branch name')
-  .option('-m, --message [optional]', 'Title of the merge request')
-  .option('-a, --assignee [optional]', 'User to assign merge request to')
-  .option('-l --labels [optional]', 'Comma separated list of labels to assign while creating merge request')
-  .option('-e, --edit [optional]', 'If supplied opens edit page of merge request. Opens merge request page otherwise')
-  .option('-p, --print [optional]', 'If supplied print the url of the merge request. Opens merge request page otherwise')
-  .option('-v, --verbose [optional]', 'Detailed logging emitted on console for debug purpose')
-  .description('Create merge request on gitlab')
-  .action(function (options) {
-    createMergeRequest(options);
-  })
-
-program
   .command('browse')
   .option('-v, --verbose [optional]', 'Detailed logging emitted on console for debug purpose')
   .description('Open current branch page in gitlab')
@@ -504,7 +489,22 @@ program
   });
 
 program
-  .command('open-merge-requests')
+  .command('merge-request')
+  .option('-b, --base [optional]', 'Base branch name')
+  .option('-t, --target [optional]', 'Target branch name')
+  .option('-m, --message [optional]', 'Title of the merge request')
+  .option('-a, --assignee [optional]', 'User to assign merge request to')
+  .option('-l --labels [optional]', 'Comma separated list of labels to assign while creating merge request')
+  .option('-e, --edit [optional]', 'If supplied opens edit page of merge request. Opens merge request page otherwise')
+  .option('-p, --print [optional]', 'If supplied print the url of the merge request. Opens merge request page otherwise')
+  .option('-v, --verbose [optional]', 'Detailed logging emitted on console for debug purpose')
+  .description('Create merge request on gitlab')
+  .action(function (options) {
+    createMergeRequest(options);
+  })
+
+program
+  .command('merge-requests')
   .option('-v, --verbose [optional]', 'Detailed logging emitted on console for debug purpose')
   .option('-r, --remote [optional]', 'If provided this will be used as remote')
   .option('-a, --assignee [optional]', 'If provided, merge requests assigned to only this user will be shown')
