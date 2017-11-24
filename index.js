@@ -334,10 +334,7 @@ function openMergeRequests(options) {
   })
 }
 
-
-
 function createMergeRequest(options) {
-
   logger = log.getInstance(options.verbose);
   if(options.verbose){
     logger.log('verbose option used. Detailed logging information will be emitted.'.green);
@@ -473,25 +470,6 @@ program
   .version('0.0.1')
   .description('gitlab command line for creating merge request.')
 
-if (!process.argv.slice(2).length) {
-  program.outputHelp();
-  process.exit(1);
-}
-
-var commandsSupported = [
-  'create-merge-request',
-  'browse',
-  'compare',
-  'open-merge-requests'
-];
-
-var command = process.argv.slice(2)[0];
-
-if (commandsSupported.indexOf(command.trim()) == -1) {
-  console.error(("Invalid command" + " " + command).red);
-  program.outputHelp();
-}
-
 program
   .command('create-merge-request')
   .option('-b, --base [optional]', 'Base branch name')
@@ -535,7 +513,17 @@ program
     openMergeRequests(options);
   });
 
+program
+  .on('command:*', function() {
+    console.error(('Invalid command ' + program.args[0]).red);
+    program.outputHelp();
+  });
+
 program.parse(process.argv);
+
+if (program.args.length < 1) {
+  program.outputHelp();
+}
 
 module.exports = function () {
 
