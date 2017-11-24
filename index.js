@@ -55,14 +55,16 @@ function getMergeRequestTitle(title){
       resolve(title);
     } else {
 
-      exec('git rev-parse --show-toplevel', function(error, repoDir, stderr){
+      exec('git rev-parse --show-toplevel', function (error, repoDir, stderr) {
         var filePath = repoDir.trim() + '/.git/PULL_REQUEST_TITLE';
-        exec('git log -1 --pretty=%B > ' + filePath,  function(error, remote, stderr){
-          editor(filePath,  function (code, sig) {
-            fs.readFile(filePath, 'utf8', function(err, data){
-              title = data;
-              logger.log('Input obtained using editor: ', title.green);
-              resolve(title);
+        exec('git log -1 --pretty=%B > ' + filePath, function (error, remote, stderr) {
+          exec('git config core.editor', function (error, gitEditor, stderr) {
+            editor(filePath, { editor: gitEditor.trim() || null }, function (code, sig) {
+              fs.readFile(filePath, 'utf8', function (err, data) {
+                title = data;
+                logger.log('Input obtained using editor: ', title.green);
+                resolve(title);
+              });
             });
           });
         });
