@@ -282,32 +282,33 @@ function getRemote(options){
   return promise;
 }
 
-function getUserId(options){
-  logger.log('\nGetting userId for username : ', options.assignee);
+function getUser(query) {
   var promise = new Promise(function (resolve, reject) {
-    if(!options.assignee){
-      resolve('')
+    if (!query) {
+      resolve(null);
       return;
     }
 
-    gitlab.users.search(options.assignee, function(userInfo){
-      if(userInfo instanceof Array &&  userInfo.length > 0){
+    logger.log('\nGetting user matching : ', query);
+
+    gitlab.users.search(query, function (userInfo){
+      if (userInfo instanceof Array && userInfo.length > 0){
         var user = userInfo[0];
-        userId = user.id;
-        resolve(userId);
+        resolve(user);
       } else {
-        console.log('User with username "' + options.assignee + '" was not found. Please check the username and try again.')
+        console.error(colors.yellow('User matching "' + query + '" was not found. Please check input and try again.'))
         process.exit(1);
       }
     })
   });
+
   return promise;
 }
 
 function openMergeRequests(options) {
   logger = log.getInstance(options.verbose);
-  getRemote(options).then(function(remote){
 
+  getRemote(options).then(function(remote){
     if (!remote) {
       console.error(colors.red('Branch ' + baseBranch + " is not tracked by any remote branch."));
       console.log('Set the remote tracking by `git remote git branch --set-upstream <branch-name> <remote-name>/<branch-name>`');
@@ -316,35 +317,35 @@ function openMergeRequests(options) {
     }
 
     getURLOfRemote(remote).then(function (remoteURL) {
-      var projectName = remoteURL.match(regexParseProjectName)[2];
+      getUser(options.assignee).then(function (assignee) {
+        var projectName = remoteURL.match(regexParseProjectName)[2];
 
-      var queryStringToAppend = "?";
-      if(options.state){
-        queryStringToAppend += "state="  + options.state + "&";
-      }
+        var query = '?';
 
-
-      getUserId(options).then(function(userId){
-        if(userId){
-          queryStringToAppend += "assignee_id=" + userId + "&";
+        if (options.state) {
+          query += 'state=' + options.state + '&';
         }
-        open(gitlabURL + "/" + projectName + "/merge_requests" + queryStringToAppend.slice(0, -1));
-      })
+
+        if (assignee) {
+          query += 'assignee_id=' + assignee.id + '&';
+        }
+
+        open(gitlabURL + '/' + projectName + '/merge_requests' + query.slice(0, -1));
+      });
     });
   })
 }
 
 function createMergeRequest(options) {
   logger = log.getInstance(options.verbose);
-  if(options.verbose){
-    logger.log('verbose option used. Detailed logging information will be emitted.'.green);
+
+  if (options.verbose) {
+    logger.log('Verbose option used. Detailed logging information will be emitted.'.green);
   }
 
   logger.log('\n\n\nGetting base branch information'.blue);
   getBaseBranchName(options.base).then(function (baseBranch) {
-
     getRemoteForBranch(options.base || baseBranch).then(function (remote) {
-
       if (!remote) {
         console.error(colors.red('Branch ' + baseBranch + " is not tracked by any remote branch."));
         console.log('Set the remote tracking by `git remote git branch --set-upstream <branch-name> <remote-name>/<branch-name>`');
@@ -353,7 +354,6 @@ function createMergeRequest(options) {
       }
 
       getURLOfRemote(remote).then(function (remoteURL) {
-
         var gitlabHost = URL.parse(gitlabURL).host;
 
         logger.log('\ngitlab host obtained : ', gitlabHost.green);
@@ -397,62 +397,62 @@ function createMergeRequest(options) {
                 logger.log('Getting target project information');
                 gitlab.projects.show(targetProjectName, function (targetProject) {
                   logger.log('Target project info obtained :', JSON.stringify(targetProject).green);
+
                   var targetProjectId = targetProject.id;
 
-                  if(sourceBranch==targetBranch && projectId==targetProjectId){
+                  if (sourceBranch == targetBranch && projectId == targetProjectId){
                     console.error(colors.red("\nCan not create this merge request"));
                     console.log(colors.red("You can not use same project/branch for source and target"));
                     process.exit(1);
                   }
 
-                  getMergeRequestTitle(options.message).then(function (userMessage) {
+                  getUser(options.assignee).then(function (assignee) {
+                    getMergeRequestTitle(options.message).then(function (userMessage) {
+                      var title = userMessage.split("\n")[0];
+                      var description = userMessage.split("\n").slice(2).join("    \n");
 
-                    var title = userMessage.split("\n")[0];
-                    var description = userMessage.split("\n").slice(2).join("    \n");
+                      logger.log('Merge request title : ', title.green);
+                      if (description) logger.log('Merge request description : ', description.green);
+                      logger.log('\n\nCreating merge request'.blue)
 
-                    logger.log('Merge request title : ', title.green);
-                    if(description){
-                      logger.log('Merge request description : ', description.green);
-                    }
+                      gitlab.projects.post('projects/' + projectId + '/merge_requests', {
+                        id: projectId,
+                        source_branch: sourceBranch,
+                        target_branch: targetBranch,
+                        title: title,
+                        description: description,
+                        labels: labels,
+                        assignee_id: assignee && assignee.id,
+                        target_project_id: targetProjectId
+                      }, function (err, response, body) {
+                        logger.log('Merge request response : \n\n', response);
+                        var mergeRequestResponse = response.body;
+                        logger.log('Merge request response body: \n\n', mergeRequestResponse);
 
-                    logger.log('\n\nCreating merge request'.blue)
+                        if (mergeRequestResponse.iid) {
+                          var url = mergeRequestResponse.web_url;
 
-                    var mergeRequestURL = gitlabURL + "/api/v3/projects/" + projectId + "/merge_requests";
-                    gitlab.projects.post("projects/" + projectId + "/merge_requests", {
-                      id: projectId,
-                      source_branch: sourceBranch,
-                      target_branch: targetBranch,
-                      title: title,
-                      description: description,
-                      labels: labels,
-                      target_project_id: targetProjectId
-                    }, function (err, response, body) {
-                      logger.log('Merge request response : \n\n', response);
-                      var mergeRequestResponse = response.body;
-                      logger.log('Merge request response body: \n\n', mergeRequestResponse);
+                          if (!url) {
+                            url = gitlabURL + '/' + targetProjectName + '/merge_requests/' + mergeRequestResponse.iid
+                          }
 
-                      if (mergeRequestResponse.iid) {
-                        var urlToOpen = mergeRequestResponse.web_url;
-                        if(!urlToOpen){
-                          urlToOpen = gitlabURL + "/" + targetProjectName + "/merge_requests/" + mergeRequestResponse.iid
+                          if (options.edit) {
+                            url += '/edit'
+                          }
+
+                          if (options.print) {
+                            console.log(url);
+                          } else {
+                            open(url);
+                          }
+                        } else if (mergeRequestResponse.message) {
+                          console.error(colors.red("Couldn't create merge request"));
+                          console.log(colors.red(mergeRequestResponse.message.join()));
+                        } else if (mergeRequestResponse instanceof Array) {
+                          console.error(colors.red("Couldn't create merge request"));
+                          console.log(colors.red(mergeRequestResponse.join()));
                         }
-
-                        var mergeRequestUrl = urlToOpen + (!!options.edit ? '/edit' : '');
-                        if (options.print) {
-                          console.log(mergeRequestUrl);
-                        } else {
-                          open(mergeRequestUrl);
-                        }
-                        return;
-                      }
-                      if (mergeRequestResponse.message) {
-                        console.error(colors.red("Couldn't create merge request"));
-                        console.log(colors.red(mergeRequestResponse.message.join()));
-                      }
-                      if(mergeRequestResponse instanceof Array){
-                        console.error(colors.red("Couldn't create merge request"));
-                        console.log(colors.red(mergeRequestResponse.join()));
-                      }
+                      });
                     });
                   });
                 });
@@ -475,6 +475,7 @@ program
   .option('-b, --base [optional]', 'Base branch name')
   .option('-t, --target [optional]', 'Target branch name')
   .option('-m, --message [optional]', 'Title of the merge request')
+  .option('-a, --assignee [optional]', 'User to assign merge request to')
   .option('-l --labels [optional]', 'Comma separated list of labels to assign while creating merge request')
   .option('-e, --edit [optional]', 'If supplied opens edit page of merge request. Opens merge request page otherwise')
   .option('-p, --print [optional]', 'If supplied print the url of the merge request. Opens merge request page otherwise')
