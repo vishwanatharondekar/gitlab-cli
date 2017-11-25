@@ -9,6 +9,7 @@ var editor = require('editor');
 var exec = childProcess.exec;
 var execSync = childProcess.execSync;
 var fs = require('fs');
+var legacies = {};
 var open = require("open");
 var projectDir = process.cwd();
 var Promise = require('promise');
@@ -129,7 +130,7 @@ function getAllRemotes(){
 function parseBranchRemoteInfo(branchName){
   var promise = new Promise(function (resolve, reject) {
 
-    if(branchName.indexOf('/')!=-1){
+    if (branchName.indexOf('/') != -1){
       getAllRemotes().then(function(allRemotes){
         var splits = branchName.split('/');
         var maybeRemote = splits[0].trim();
@@ -496,25 +497,14 @@ function createMergeRequest(options) {
   });
 }
 
-
 program
   .version('0.0.1')
   .description('gitlab command line for creating merge request.')
 
-program
-  .command('create-merge-request')
-  .option('-b, --base [optional]', 'Base branch name')
-  .option('-t, --target [optional]', 'Target branch name')
-  .option('-m, --message [optional]', 'Title of the merge request')
-  .option('-a, --assignee [optional]', 'User to assign merge request to')
-  .option('-l --labels [optional]', 'Comma separated list of labels to assign while creating merge request')
-  .option('-e, --edit [optional]', 'If supplied opens edit page of merge request. Opens merge request page otherwise')
-  .option('-p, --print [optional]', 'If supplied print the url of the merge request. Opens merge request page otherwise')
-  .option('-v, --verbose [optional]', 'Detailed logging emitted on console for debug purpose')
-  .description('Create merge request on gitlab')
-  .action(function (options) {
-    createMergeRequest(options);
-  })
+program.Command.prototype.legacy = function (alias) {
+  legacies[alias] = this._name;
+  return this;
+};
 
 program
   .command('browse')
@@ -535,12 +525,31 @@ program
   });
 
 program
-  .command('open-merge-requests')
+  .command('merge-request')
+  .alias('mr')
+  .legacy('create-merge-request')
+  .option('-b, --base [optional]', 'Base branch name')
+  .option('-t, --target [optional]', 'Target branch name')
+  .option('-m, --message [optional]', 'Title of the merge request')
+  .option('-a, --assignee [optional]', 'User to assign merge request to')
+  .option('-l --labels [optional]', 'Comma separated list of labels to assign while creating merge request')
+  .option('-e, --edit [optional]', 'If supplied opens edit page of merge request. Opens merge request page otherwise')
+  .option('-p, --print [optional]', 'If supplied print the url of the merge request. Opens merge request page otherwise')
+  .option('-v, --verbose [optional]', 'Detailed logging emitted on console for debug purpose')
+  .description('Create merge request on gitlab')
+  .action(function (options) {
+    createMergeRequest(options);
+  })
+
+program
+  .command('merge-requests')
+  .alias('mrs')
+  .legacy('open-merge-requests')
   .option('-v, --verbose [optional]', 'Detailed logging emitted on console for debug purpose')
   .option('-r, --remote [optional]', 'If provided this will be used as remote')
   .option('-a, --assignee [optional]', 'If provided, merge requests assigned to only this user will be shown')
   .option('-s, --state [optional]', 'If provide merge requests with state provided will be shown')
-  .description('Opens merge request page for the repo.')
+  .description('Opens merge requests page for the repo')
   .action(function (options) {
     openMergeRequests(options);
   });
@@ -550,6 +559,8 @@ program
     console.error(('Invalid command ' + program.args[0]).red);
     program.outputHelp();
   });
+
+if (legacies[process.argv[2]]) process.argv[2] = legacies[process.argv[2]];
 
 program.parse(process.argv);
 
