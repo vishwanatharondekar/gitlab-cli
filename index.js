@@ -1,35 +1,63 @@
 #!/usr/bin/env node
 require('dotenv').config();
+const gitUrlParse = require('git-url-parse');
 const program = require('commander');
+var childProcess = require('child_process');
+var colors = require('colors');
 var gitlab = require('gitlab');
-var exec = require('child_process').exec;
 var editor = require('editor');
+var exec = childProcess.exec;
+var execSync = childProcess.execSync;
 var fs = require('fs');
 var open = require("open");
+var projectDir = process.cwd();
 var Promise = require('promise');
 var URL = require('url');
-var colors = require('colors');
+var readlineSync = require('readline-sync');
 var regexParseProjectName = /(.+:\/\/.+?\/|.+:)(.+\/.+)+.git/;
 
-if (!process.env.GITLAB_URL) {
-  console.error(colors.red('Env variable GITLAB_URL is not set. Please set env variable GITLAB_URL'));
-  console.error('Eg GITLAB_URL=http://gitlab.yourcompany.com');
-  process.exit(1);
-}
+var git = {
+  config: {
+    get: function (key) {
+      return execSync('git config --get ' + key + ' || true', { cwd: projectDir }).toString().trim()
+    },
+    set: function (key, value) {
+      execSync('git config --add ' + key + ' ' + value, { cwd: projectDir })
+    },
+  }
+};
 
-if (!process.env.GITLAB_TOKEN) {
-  console.error(colors.red('Please set env variable GITLAB_TOKEN'));
-  console.error('Find your token at ' + process.env.GITLAB_URL + '/profile/account');
-  process.exit(1);
-}
+var gitlab = require('gitlab')((function () {
+  var options = {
+    url: git.config.get('gitlab.url') || process.env.GITLAB_URL || (function (remote) {
+      var url = git.config.get('remote.origin.url');
+      return url && 'https://' + gitUrlParse(url).resource;
+    })(),
+    token: git.config.get('gitlab.token') || process.env.GITLAB_TOKEN,
+  };
 
-var projectDir = process.cwd();
-var gitlabURL = process.env.GITLAB_URL;
+  if (!options.url) {
+    var question = 'Enter GitLab URL: '.yellow;
+    while (!options.url) {
+      options.url = readlineSync.question(question);
+      question = 'Invalid URL (try again): '.red
+    }
+    git.config.set('gitlab.url', options.url);
+  }
 
-var gitlab = require('gitlab')({
-  url: gitlabURL,
-  token: process.env.GITLAB_TOKEN
-});
+  if (!options.token) {
+    var url = options.url + '/profile/personal_access_tokens';
+    console.log(('A personal access token is needed to use the GitLab API\ncreate one at ' + url + '\n').yellow)
+    var question = 'Enter personal access token: '.yellow
+    while (!options.token) {
+      options.token = readlineSync.question(question);
+      question = 'Invalid token (try again): '.red
+    }
+    git.config.set('gitlab.token', options.token);
+  }
+
+  return options
+})());
 
 var log = {
   getInstance : function(verbose){
@@ -228,7 +256,7 @@ function browse(options) {
 
       getURLOfRemote(remote).then(function (remoteURL) {
         var projectName = remoteURL.match(regexParseProjectName)[2];
-        open(gitlabURL + "/" + projectName + "/tree/" + curBranchName);
+        open(gitlab.options.url + "/" + projectName + "/tree/" + curBranchName);
       });
 
     });
@@ -257,7 +285,7 @@ function compare(options) {
           var targetBranch = options.target || defaultBranch;
           var sourceBranch = baseBranch;
           var projectId = project.id;
-          open(gitlabURL + "/" + projectName + "/compare/" + targetBranch + "..." + sourceBranch)
+          open(gitlab.options.url + "/" + projectName + "/compare/" + targetBranch + "..." + sourceBranch)
         });
 
       });
@@ -330,7 +358,7 @@ function openMergeRequests(options) {
           query += 'assignee_id=' + assignee.id + '&';
         }
 
-        open(gitlabURL + '/' + projectName + '/merge_requests' + query.slice(0, -1));
+        open(gitlab.options.url + '/' + projectName + '/merge_requests' + query.slice(0, -1));
       });
     });
   })
@@ -354,7 +382,7 @@ function createMergeRequest(options) {
       }
 
       getURLOfRemote(remote).then(function (remoteURL) {
-        var gitlabHost = URL.parse(gitlabURL).host;
+        var gitlabHost = URL.parse(gitlab.options.url).host;
 
         logger.log('\ngitlab host obtained : ', gitlabHost.green);
 
@@ -433,7 +461,7 @@ function createMergeRequest(options) {
                           var url = mergeRequestResponse.web_url;
 
                           if (!url) {
-                            url = gitlabURL + '/' + targetProjectName + '/merge_requests/' + mergeRequestResponse.iid
+                            url = gitlab.options.url + '/' + targetProjectName + '/merge_requests/' + mergeRequestResponse.iid
                           }
 
                           if (options.edit) {
