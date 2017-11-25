@@ -29,17 +29,20 @@ var git = {
 
 var gitlab = require('gitlab')((function () {
   var options = {
-    url: git.config.get('gitlab.url') || process.env.GITLAB_URL || (function (remote) {
-      var url = git.config.get('remote.origin.url');
-      return url && 'https://' + gitUrlParse(url).resource;
-    })(),
+    url: git.config.get('gitlab.url') || process.env.GITLAB_URL,
     token: git.config.get('gitlab.token') || process.env.GITLAB_TOKEN,
   };
 
   if (!options.url) {
-    var question = 'Enter GitLab URL: '.yellow;
+    var question = 'Enter GitLab URL';
+    var defaultInput = (function () {
+      var url = git.config.get('remote.origin.url');
+      return url && 'https://' + gitUrlParse(url).resource;
+    })();
+    if (defaultInput) question += ' (' + defaultInput + ')';
+    question = (question + ': ').yellow;
     while (!options.url) {
-      options.url = readlineSync.question(question);
+      options.url = readlineSync.question(question, { defaultInput: defaultInput });
       question = 'Invalid URL (try again): '.red
     }
     git.config.set('gitlab.url', options.url);
