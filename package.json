@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "colors": "^1.1.2",
-    "commander": "^2.9.0",
+    "commander": "^2.12.1",
     "dotenv": "^4.0.0",
     "editor": "^1.0.0",
     "gitlab": "^1.7.1",
