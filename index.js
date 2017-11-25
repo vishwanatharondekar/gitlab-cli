@@ -35,13 +35,14 @@ var gitlab = require('gitlab')((function () {
   };
 
   if (!options.url) {
-    var question = 'Enter GitLab URL';
     var defaultInput = (function () {
       var url = git.config.get('remote.origin.url');
-      return url && 'https://' + gitUrlParse(url).resource;
+      if (!url || url.indexOf('bitbucket') !== -1 || url.indexOf('github') !== -1) {
+        url = 'https://gitlab.com';
+      }
+      return 'https://' + gitUrlParse(url).resource;
     })();
-    if (defaultInput) question += ' (' + defaultInput + ')';
-    question = (question + ': ').yellow;
+    var question = ('Enter GitLab URL (' + defaultInput + '): ').yellow;
     while (!options.url) {
       options.url = readlineSync.question(question, { defaultInput: defaultInput });
       question = 'Invalid URL (try again): '.red
@@ -51,7 +52,7 @@ var gitlab = require('gitlab')((function () {
 
   if (!options.token) {
     var url = options.url + '/profile/personal_access_tokens';
-    console.log(('A personal access token is needed to use the GitLab API\ncreate one at ' + url + '\n').yellow)
+    console.log('A personal access token is needed to use the GitLab API\n' + url.grey)
     var question = 'Enter personal access token: '.yellow
     while (!options.token) {
       options.token = readlineSync.question(question);
