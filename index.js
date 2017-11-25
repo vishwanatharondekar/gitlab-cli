@@ -51,7 +51,7 @@ var gitlab = require('gitlab')((function () {
 
   if (!options.token) {
     var url = options.url + '/profile/personal_access_tokens';
-    console.log(('A personal access token is needed to use the GitLab API\ncreate one at ' + url + '\n').yellow)
+    console.log('A personal access token is needed to use the GitLab API\n' + url.grey)
     var question = 'Enter personal access token: '.yellow
     while (!options.token) {
       options.token = readlineSync.question(question);
