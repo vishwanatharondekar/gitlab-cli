@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {},
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "bin": {
     "gitlab-cli": "index.js",
     "git-lab": "index.js"
