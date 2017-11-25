@@ -5,6 +5,7 @@ var gitlab = require('gitlab');
 var exec = require('child_process').exec;
 var editor = require('editor');
 var fs = require('fs');
+var legacies = {};
 var open = require("open");
 var Promise = require('promise');
 var URL = require('url');
@@ -98,7 +99,7 @@ function getAllRemotes(){
 function parseBranchRemoteInfo(branchName){
   var promise = new Promise(function (resolve, reject) {
 
-    if(branchName.indexOf('/')!=-1){
+    if (branchName.indexOf('/') != -1){
       getAllRemotes().then(function(allRemotes){
         var splits = branchName.split('/');
         var maybeRemote = splits[0].trim();
@@ -465,10 +466,14 @@ function createMergeRequest(options) {
   });
 }
 
-
 program
   .version('0.0.1')
   .description('gitlab command line for creating merge request.')
+
+program.Command.prototype.legacy = function (alias) {
+  legacies[alias] = this._name;
+  return this;
+};
 
 program
   .command('browse')
@@ -490,6 +495,8 @@ program
 
 program
   .command('merge-request')
+  .alias('mr')
+  .legacy('create-merge-request')
   .option('-b, --base [optional]', 'Base branch name')
   .option('-t, --target [optional]', 'Target branch name')
   .option('-m, --message [optional]', 'Title of the merge request')
@@ -505,11 +512,13 @@ program
 
 program
   .command('merge-requests')
+  .alias('mrs')
+  .legacy('open-merge-requests')
   .option('-v, --verbose [optional]', 'Detailed logging emitted on console for debug purpose')
   .option('-r, --remote [optional]', 'If provided this will be used as remote')
   .option('-a, --assignee [optional]', 'If provided, merge requests assigned to only this user will be shown')
   .option('-s, --state [optional]', 'If provide merge requests with state provided will be shown')
-  .description('Opens merge request page for the repo.')
+  .description('Opens merge requests page for the repo')
   .action(function (options) {
     openMergeRequests(options);
   });
@@ -519,6 +528,8 @@ program
     console.error(('Invalid command ' + program.args[0]).red);
     program.outputHelp();
   });
+
+if (legacies[process.argv[2]]) process.argv[2] = legacies[process.argv[2]];
 
 program.parse(process.argv);
 
