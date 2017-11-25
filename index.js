@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+require('dotenv').config();
 const program = require('commander');
 var gitlab = require('gitlab');
 var exec = require('child_process').exec;
