@@ -499,8 +499,8 @@ function createMergeRequest(options) {
 }
 
 program
-  .version('0.0.1')
-  .description('gitlab command line for creating merge request.')
+  .description('gitlab command line utility')
+  .version('1.0.2')
 
 program.Command.prototype.legacy = function (alias) {
   legacies[alias] = this._name;
