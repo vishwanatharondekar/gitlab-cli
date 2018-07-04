@@ -475,20 +475,26 @@ function createMergeRequest(options) {
                           } else {
                             open(url);
                           }
-                        } else if (mergeRequestResponse.message) {
+                        }
+                      }).catch(function (err) {
+                        if (err.message) {
                           console.error(colors.red('Couldn\'t create merge request'));
-                          console.log(colors.red(mergeRequestResponse.message.join()));
-                        } else if (mergeRequestResponse instanceof Array) {
+                          console.log(colors.red(err.message));
+                        } else if (err instanceof Array) {
                           console.error(colors.red('Couldn\'t create merge request'));
-                          console.log(colors.red(mergeRequestResponse.join()));
+                          console.log(colors.red(err.join()));
                         }
                       });
                     });
                   });
+                }).catch(function (err) {
+                  console.log('Project info fetch failed : ' + err);
                 });
               });
             });
           });
+        }).catch(function (err) {
+          console.log('Project info fetch failed : ' + err);
         });
       });
     });
