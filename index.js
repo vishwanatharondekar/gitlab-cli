@@ -4,7 +4,7 @@ var gitUrlParse = require('git-url-parse');
 var program = require('commander');
 var childProcess = require('child_process');
 var colors = require('colors');
-var gitlab = require('gitlab');
+var Gitlab = require('gitlab/dist/es5').default;
 var editor = require('editor');
 var exec = childProcess.exec;
 var execSync = childProcess.execSync;
@@ -28,7 +28,7 @@ var git = {
   }
 };
 
-var gitlab = require('gitlab')((function () {
+var options = (function () {
   var options = {
     url: git.config.get('gitlab.url') || process.env.GITLAB_URL,
     token: git.config.get('gitlab.token') || process.env.GITLAB_TOKEN,
@@ -62,7 +62,9 @@ var gitlab = require('gitlab')((function () {
   }
 
   return options;
-})());
+})();
+var gitlab = new Gitlab(options);
+gitlab.options = options;
 
 var log = {
   getInstance : function(verbose){
@@ -82,7 +84,7 @@ var allRemotes = null;
 var logger = null;
 
 function getMergeRequestTitle(title){
-  logger.log('\nGetting merge request title. Argument provided : ', title);
+  logger.log('\nGetting merge request title. Argument provided : ' + title);
   var promise = new Promise(function (resolve, reject) {
     if(title){
       logger.log('Title obtained with -m option: ', title.green);
@@ -240,7 +242,7 @@ function getURLOfRemote(remote) {
 function getProjectInfo(projectName) {
   logger.log('\nGetting project info for project : ', projectName);
   var promise = new Promise(function (resolve, reject) {
-    gitlab.projects.show(projectName, function (project) {
+    gitlab.Projects.show(projectName).then(function (project) {
       logger.log('Project info obtained : ', project);
       resolve(project);
     });
@@ -285,7 +287,7 @@ function compare(options) {
       getURLOfRemote(remote).then(function (remoteURL) {
 
         var projectName = remoteURL.match(regexParseProjectName)[2];
-        gitlab.projects.show(projectName, function (project) {
+        gitlab.Projects.show(projectName).then(function (project) {
           var defaultBranch = project.default_branch;
           var targetBranch = options.target || defaultBranch;
           var sourceBranch = baseBranch;
@@ -324,7 +326,7 @@ function getUser(query) {
 
     logger.log('\nGetting user matching : ', query);
 
-    gitlab.users.search(query, function (userInfo){
+    gitlab.Users.search(query).then(function (userInfo){
       if (userInfo instanceof Array && userInfo.length > 0){
         var user = userInfo[0];
         resolve(user);
@@ -403,7 +405,8 @@ function createMergeRequest(options) {
         logger.log('\nProject name derived from host :', projectName);
 
         logger.log('\nGetting gitlab project info for :', projectName);
-        gitlab.projects.show(projectName, function (project) {
+
+        gitlab.Projects.show(projectName).then(function (project) {
           logger.log('Base project info obtained :', JSON.stringify(project).green);
 
           var defaultBranch = project.default_branch;
@@ -428,7 +431,7 @@ function createMergeRequest(options) {
                 }
 
                 logger.log('Getting target project information');
-                gitlab.projects.show(targetProjectName, function (targetProject) {
+                gitlab.Projects.show(targetProjectName).then(function (targetProject) {
                   logger.log('Target project info obtained :', JSON.stringify(targetProject).green);
 
                   var targetProjectId = targetProject.id;
@@ -448,19 +451,13 @@ function createMergeRequest(options) {
                       if (description) logger.log('Merge request description : ', description.green);
                       logger.log('\n\nCreating merge request'.blue);
 
-                      gitlab.projects.post('projects/' + projectId + '/merge_requests', {
-                        id: projectId,
-                        source_branch: sourceBranch,
-                        target_branch: targetBranch,
-                        title: title,
+                      gitlab.MergeRequests.create(projectId, sourceBranch, targetBranch, title, {
                         description: description,
                         labels: labels,
                         assignee_id: assignee && assignee.id,
                         target_project_id: targetProjectId
-                      }, function (err, response, body) {
-                        logger.log('Merge request response : \n\n', response);
-                        var mergeRequestResponse = response.body;
-                        logger.log('Merge request response body: \n\n', mergeRequestResponse);
+                      }).then(function (mergeRequestResponse) {
+                        logger.log('Merge request response: \n\n', mergeRequestResponse);
 
                         if (mergeRequestResponse.iid) {
                           var url = mergeRequestResponse.web_url;
