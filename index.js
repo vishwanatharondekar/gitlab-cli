@@ -4,7 +4,7 @@ const gitUrlParse = require('git-url-parse');
 const program = require('commander');
 var childProcess = require('child_process');
 var colors = require('colors');
-var gitlab = require('gitlab');
+var gitlabImport = require('gitlab/dist/es5').default;
 var editor = require('editor');
 var exec = childProcess.exec;
 var execSync = childProcess.execSync;
@@ -28,7 +28,8 @@ var git = {
   }
 };
 
-var gitlab = require('gitlab')((function () {
+var globalOptions = null;
+var gitlab = new gitlabImport((function () {
   var options = {
     url: git.config.get('gitlab.url') || process.env.GITLAB_URL,
     token: git.config.get('gitlab.token') || process.env.GITLAB_TOKEN,
@@ -61,6 +62,7 @@ var gitlab = require('gitlab')((function () {
     git.config.set('gitlab.token', options.token);
   }
 
+  globalOptions = options;
   return options
 })());
 
@@ -240,10 +242,7 @@ function getURLOfRemote(remote) {
 function getProjectInfo(projectName) {
   logger.log('\nGetting project info for project : ', projectName);
   var promise = new Promise(function (resolve, reject) {
-    gitlab.projects.show(projectName, function (project) {
-      logger.log('Project info obtained : ', project);
-      resolve(project);
-    });
+    return gitlab.Projects.show(projectName);
   });
   return promise;
 }
@@ -261,7 +260,7 @@ function browse(options) {
 
       getURLOfRemote(remote).then(function (remoteURL) {
         var projectName = remoteURL.match(regexParseProjectName)[2];
-        open(gitlab.options.url + "/" + projectName + "/tree/" + curBranchName);
+        open(globalOptions.url + "/" + projectName + "/tree/" + curBranchName);
       });
 
     });
@@ -285,12 +284,12 @@ function compare(options) {
       getURLOfRemote(remote).then(function (remoteURL) {
 
         var projectName = remoteURL.match(regexParseProjectName)[2];
-        gitlab.projects.show(projectName, function (project) {
+        gitlab.Projects.show(projectName).then(function (project) {
           var defaultBranch = project.default_branch;
           var targetBranch = options.target || defaultBranch;
           var sourceBranch = baseBranch;
           var projectId = project.id;
-          open(gitlab.options.url + "/" + projectName + "/compare/" + targetBranch + "..." + sourceBranch)
+          open(globalOptions.url + "/" + projectName + "/compare/" + targetBranch + "..." + sourceBranch)
         });
 
       });
@@ -324,7 +323,7 @@ function getUser(query) {
 
     logger.log('\nGetting user matching : ', query);
 
-    gitlab.users.search(query, function (userInfo){
+    gitlab.Users.search(query).then(function (userInfo){
       if (userInfo instanceof Array && userInfo.length > 0){
         var user = userInfo[0];
         resolve(user);
@@ -363,7 +362,7 @@ function openMergeRequests(options) {
           query += 'assignee_id=' + assignee.id + '&';
         }
 
-        open(gitlab.options.url + '/' + projectName + '/merge_requests' + query.slice(0, -1));
+        open(globalOptions.url + '/' + projectName + '/merge_requests' + query.slice(0, -1));
       });
     });
   })
@@ -387,7 +386,7 @@ function createMergeRequest(options) {
       }
 
       getURLOfRemote(remote).then(function (remoteURL) {
-        var gitlabHost = URL.parse(gitlab.options.url).host;
+        var gitlabHost = URL.parse(globalOptions.url).host;
 
         logger.log('\ngitlab host obtained : ', gitlabHost.green);
 
@@ -403,7 +402,8 @@ function createMergeRequest(options) {
         logger.log('\nProject name derived from host :', projectName);
 
         logger.log('\nGetting gitlab project info for :', projectName);
-        gitlab.projects.show(projectName, function (project) {
+
+        gitlab.Projects.show(projectName).then(function (project) {
           logger.log('Base project info obtained :', JSON.stringify(project).green);
 
           var defaultBranch = project.default_branch;
@@ -428,7 +428,7 @@ function createMergeRequest(options) {
                 }
 
                 logger.log('Getting target project information');
-                gitlab.projects.show(targetProjectName, function (targetProject) {
+                gitlab.Projects.show(targetProjectName).then(function (targetProject) {
                   logger.log('Target project info obtained :', JSON.stringify(targetProject).green);
 
                   var targetProjectId = targetProject.id;
@@ -447,26 +447,26 @@ function createMergeRequest(options) {
                       logger.log('Merge request title : ', title.green);
                       if (description) logger.log('Merge request description : ', description.green);
                       logger.log('\n\nCreating merge request'.blue)
+                      logger.log('\n\n gitlab.MergeRequests.create : ', gitlab.MergeRequests.create)
 
-                      gitlab.projects.post('projects/' + projectId + '/merge_requests', {
+                      gitlab.MergeRequests.create(projectId, sourceBranch, targetBranch, title, {
                         id: projectId,
-                        source_branch: sourceBranch,
-                        target_branch: targetBranch,
-                        title: title,
+                        // sourceBranch: sourceBranch,
+                        // targetBranch: targetBranch,
+                        // title: title,
                         description: description,
                         labels: labels,
                         assignee_id: assignee && assignee.id,
                         target_project_id: targetProjectId
-                      }, function (err, response, body) {
-                        logger.log('Merge request response : \n\n', response);
-                        var mergeRequestResponse = response.body;
+                      }).then( function (mergeRequestResponse) {
+
                         logger.log('Merge request response body: \n\n', mergeRequestResponse);
 
                         if (mergeRequestResponse.iid) {
                           var url = mergeRequestResponse.web_url;
 
                           if (!url) {
-                            url = gitlab.options.url + '/' + targetProjectName + '/merge_requests/' + mergeRequestResponse.iid
+                            url = globalOptions.url + '/' + targetProjectName + '/merge_requests/' + mergeRequestResponse.iid
                           }
 
                           if (options.edit) {
@@ -478,12 +478,14 @@ function createMergeRequest(options) {
                           } else {
                             open(url);
                           }
-                        } else if (mergeRequestResponse.message) {
+                        }
+                      }).catch(function(err){
+                        if (err.message) {
                           console.error(colors.red("Couldn't create merge request"));
-                          console.log(colors.red(mergeRequestResponse.message.join()));
-                        } else if (mergeRequestResponse instanceof Array) {
+                          console.log(colors.red(err.message));
+                        } else if (err instanceof Array) {
                           console.error(colors.red("Couldn't create merge request"));
-                          console.log(colors.red(mergeRequestResponse.join()));
+                          console.log(colors.red(err.join()));
                         }
                       });
                     });
@@ -492,7 +494,9 @@ function createMergeRequest(options) {
               });
             });
           });
-        });
+        }).catch(function(err){
+          console.log('Project info fetch failed : ', err)
+        })
       });
     });
   });
