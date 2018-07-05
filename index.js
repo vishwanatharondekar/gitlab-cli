@@ -309,7 +309,7 @@ function getRemote(options) {
 
 function getUser(query) {
   var promise = new Promise(function (resolve/*, reject*/) {
-    if (!query) {
+    if (typeof query !== 'string') {
       resolve(null);
       return;
     }
