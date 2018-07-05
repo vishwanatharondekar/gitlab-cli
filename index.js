@@ -245,6 +245,8 @@ function getProjectInfo(projectName) {
     gitlab.Projects.show(projectName).then(function (project) {
       logger.log('Project info obtained : ', project);
       resolve(project);
+    }).catch(function (err) {
+      console.log('Project info fetch failed : ' + err);
     });
   });
   return promise;
@@ -293,6 +295,8 @@ function compare(options) {
           var sourceBranch = baseBranch;
           var projectId = project.id;
           open(gitlab.options.url + '/' + projectName + '/compare/' + targetBranch + '...' + sourceBranch);
+        }).catch(function (err) {
+          console.log('Project info fetch failed : ' + err);
         });
 
       });
@@ -326,7 +330,7 @@ function getUser(query) {
 
     logger.log('\nGetting user matching : ', query);
 
-    gitlab.Users.search(query).then(function (userInfo){
+    gitlab.Users.search(query).then(function (userInfo) {
       if (userInfo instanceof Array && userInfo.length > 0){
         var user = userInfo[0];
         resolve(user);
@@ -334,6 +338,8 @@ function getUser(query) {
         console.error(colors.yellow('User matching "' + query + '" was not found. Please check input and try again.'));
         process.exit(1);
       }
+    }).catch(function (err) {
+      console.log('User search fetch failed : ' + err);
     });
   });
 
@@ -414,6 +420,8 @@ function createMergeRequest(options) {
           var sourceBranch = baseBranch;
           var projectId = project.id;
           var labels = options.labels || '';
+          var remove_source_branch = options.remove_source_branch || false;
+          var squash = options.squash || false;
           var title = '';
 
           logger.log('\n\n\nGetting target branch information'.blue);
@@ -455,7 +463,9 @@ function createMergeRequest(options) {
                         description: description,
                         labels: labels,
                         assignee_id: assignee && assignee.id,
-                        target_project_id: targetProjectId
+                        target_project_id: targetProjectId,
+                        remove_source_branch: remove_source_branch,
+                        squash: squash,
                       }).then(function (mergeRequestResponse) {
                         logger.log('Merge request response: \n\n', mergeRequestResponse);
 
@@ -537,6 +547,8 @@ program
   .option('-m, --message [optional]', 'Title of the merge request')
   .option('-a, --assignee [optional]', 'User to assign merge request to')
   .option('-l --labels [optional]', 'Comma separated list of labels to assign while creating merge request')
+  .option('-r --remove_source_branch [optional]', 'Flag indicating if a merge request should remove the source branch when merging')
+  .option('-s --squash [optional]', 'Squash commits into a single commit when merging')
   .option('-e, --edit [optional]', 'If supplied opens edit page of merge request. Opens merge request page otherwise')
   .option('-p, --print [optional]', 'If supplied print the url of the merge request. Opens merge request page otherwise')
   .option('-v, --verbose [optional]', 'Detailed logging emitted on console for debug purpose')
