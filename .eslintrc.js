@@ -3,6 +3,11 @@ module.exports = {
         "browser": true
     },
     "extends": "eslint:recommended",
+    "globals": {
+        "process": true,
+        "require": true,
+        "module": true,
+    },
     "rules": {
         "indent": [
             "error",
@@ -19,6 +24,9 @@ module.exports = {
         "semi": [
             "error",
             "always"
+        ],
+        "no-console": [
+            "off"
         ]
     }
 };

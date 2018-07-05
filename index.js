@@ -42,10 +42,10 @@ var options = (function () {
       }
       return 'https://' + gitUrlParse(url).resource;
     })();
-    var question = ('Enter GitLab URL (' + defaultInput + '): ').yellow;
+    var urlQuestion = ('Enter GitLab URL (' + defaultInput + '): ').yellow;
     while (!options.url) {
-      options.url = readlineSync.question(question, { defaultInput: defaultInput });
-      question = 'Invalid URL (try again): '.red;
+      options.url = readlineSync.question(urlQuestion, { defaultInput: defaultInput });
+      urlQuestion = 'Invalid URL (try again): '.red;
     }
     git.config.set('gitlab.url', options.url);
   }
@@ -53,10 +53,10 @@ var options = (function () {
   if (!options.token) {
     var url = options.url + '/profile/personal_access_tokens';
     console.log('A personal access token is needed to use the GitLab API\n' + url.grey);
-    var question = 'Enter personal access token: '.yellow;
+    var tokenQuestion = 'Enter personal access token: '.yellow;
     while (!options.token) {
-      options.token = readlineSync.question(question);
-      question = 'Invalid token (try again): '.red;
+      options.token = readlineSync.question(tokenQuestion);
+      tokenQuestion = 'Invalid token (try again): '.red;
     }
     git.config.set('gitlab.token', options.token);
   }
@@ -67,10 +67,10 @@ var gitlab = new Gitlab(options);
 gitlab.options = options;
 
 var log = {
-  getInstance : function(verbose){
+  getInstance: function(verbose) {
     return {
-      log : function(debugInfo){
-        if(verbose){
+      log: function() {
+        if (verbose) {
           console.log.apply(console, arguments);
         }
       }
@@ -83,22 +83,22 @@ var allRemotes = null;
 //Will be assigned value after parsing of options
 var logger = null;
 
-function getMergeRequestTitle(title){
+function getMergeRequestTitle(title) {
   logger.log('\nGetting merge request title. Argument provided : ' + title);
-  var promise = new Promise(function (resolve, reject) {
-    if(title){
-      logger.log('Title obtained with -m option: ', title.green);
+  var promise = new Promise(function (resolve/*, reject*/) {
+    if (title) {
+      logger.log('Title obtained with -m option: ' + title.green);
       resolve(title);
     } else {
 
-      exec('git rev-parse --show-toplevel', function (error, repoDir, stderr) {
+      exec('git rev-parse --show-toplevel', function (error, repoDir/*, stderr*/) {
         var filePath = repoDir.trim() + '/.git/PULL_REQUEST_TITLE';
-        exec('git log -1 --pretty=%B > ' + filePath, function (error, remote, stderr) {
-          exec('git config core.editor', function (error, gitEditor, stderr) {
-            editor(filePath, { editor: gitEditor.trim() || null }, function (code, sig) {
+        exec('git log -1 --pretty=%B > ' + filePath, function (/*error, remote, stderr*/) {
+          exec('git config core.editor', function (error, gitEditor/*, stderr*/) {
+            editor(filePath, { editor: gitEditor.trim() || null }, function (/*code, sig*/) {
               fs.readFile(filePath, 'utf8', function (err, data) {
                 title = data;
-                logger.log('Input obtained using editor: ', title.green);
+                logger.log('Input obtained using editor: ' + title.green);
                 resolve(title);
               });
             });
@@ -110,15 +110,15 @@ function getMergeRequestTitle(title){
   return promise;
 }
 
-function getAllRemotes(){
-  var promise = new Promise(function (resolve, reject) {
-    if(allRemotes){
+function getAllRemotes() {
+  var promise = new Promise(function (resolve/*, reject*/) {
+    if (allRemotes) {
       resolve(allRemotes);
       return;
     }
 
-    exec('git remote', { cwd: projectDir }, function (error, allRemotes, stderr) {
-      if(error){
+    exec('git remote', { cwd: projectDir }, function (error, allRemotes/*, stderr*/) {
+      if (error) {
         logger.log(colors.red('Error occured :\n') , colors.red(error));
         process.exit(1);
       }
@@ -130,15 +130,15 @@ function getAllRemotes(){
   return promise;
 }
 
-function parseBranchRemoteInfo(branchName){
-  var promise = new Promise(function (resolve, reject) {
+function parseBranchRemoteInfo(branchName) {
+  var promise = new Promise(function (resolve/*, reject*/) {
 
-    if (branchName.indexOf('/') != -1){
-      getAllRemotes().then(function(allRemotes){
+    if (branchName.indexOf('/') != -1) {
+      getAllRemotes().then(function(allRemotes) {
         var splits = branchName.split('/');
         var maybeRemote = splits[0].trim();
         var remoteName = null;
-        if(allRemotes.indexOf(maybeRemote) != -1){
+        if (allRemotes.indexOf(maybeRemote) != -1) {
           branchName = splits.slice(1).join('/');
           remoteName = maybeRemote;
         }
@@ -160,23 +160,23 @@ function parseBranchRemoteInfo(branchName){
 
 function getBaseBranchName(baseBranchName) {
   logger.log('\nGetting base branch name : ');
-  var promise = new Promise(function (resolve, reject) {
+  var promise = new Promise(function (resolve/*, reject*/) {
     if (baseBranchName) {
       logger.log('Argument provided : ' + baseBranchName);
 
-      parseBranchRemoteInfo(baseBranchName).then(function(branchRemoteInfo){
+      parseBranchRemoteInfo(baseBranchName).then(function(branchRemoteInfo) {
         logger.log('Base branch name obtained :', branchRemoteInfo.branch.green);
         resolve(branchRemoteInfo.branch);
       });
     } else {
       logger.log('Executing git rev-parse --abbrev-ref HEAD');
 
-      exec('git rev-parse --abbrev-ref HEAD', { cwd: projectDir }, function (error, stdout, stderr) {
-        if(error){
+      exec('git rev-parse --abbrev-ref HEAD', { cwd: projectDir }, function (error, stdout/*, stderr*/) {
+        if (error) {
           logger.log(colors.red('Error occured :\n') , colors.red(error));
           process.exit(1);
         }
-        curBranchName = stdout.replace('\n', '');
+        var curBranchName = stdout.replace('\n', '');
         logger.log('Base branch name obtained :', curBranchName.green);
         resolve(curBranchName);
       });
@@ -185,9 +185,9 @@ function getBaseBranchName(baseBranchName) {
   return promise;
 }
 
-function getTargetBranchName(branchName){
-  var promise = new Promise(function (resolve, reject) {
-    parseBranchRemoteInfo(branchName).then(function(branchRemoteInfo){
+function getTargetBranchName(branchName) {
+  var promise = new Promise(function (resolve/*, reject*/) {
+    parseBranchRemoteInfo(branchName).then(function(branchRemoteInfo) {
       logger.log('Remote branch name obtained :', branchRemoteInfo.branch.green);
       resolve(branchRemoteInfo.branch);
     });
@@ -196,25 +196,25 @@ function getTargetBranchName(branchName){
 }
 
 function getRemoteForBranch(branchName) {
-  logger.log('\nGetting remote of branch  :', branchName);
+  logger.log('\nGetting remote of branch :', branchName);
 
 
-  var promise = new Promise(function (resolve, reject) {
+  var promise = new Promise(function (resolve/*, reject*/) {
 
-    parseBranchRemoteInfo(branchName).then(function(branchRemoteInfo){
-      if(branchRemoteInfo.remote){
+    parseBranchRemoteInfo(branchName).then(function(branchRemoteInfo) {
+      if (branchRemoteInfo.remote) {
         //Remote info supplied in the branch name
-        logger.log('Remote obtained : ', branchRemoteInfo.remote.green);
+        logger.log('Remote obtained : ' + branchRemoteInfo.remote.green);
         resolve(branchRemoteInfo.remote);
       } else {
         //Remote info is not supplied. Get it from remote set
         logger.log('Executing git config branch.' + branchName.trim() + '.remote');
-        exec('git config branch.' + branchName.trim() + '.remote', { cwd: projectDir }, function (error, remote, stderr) {
-          if(error){
+        exec('git config branch.' + branchName.trim() + '.remote', { cwd: projectDir }, function (error, remote/*, stderr*/) {
+          if (error) {
             console.error(colors.red('Error occured :\n') , colors.red(error));
             process.exit(1);
           }
-          logger.log('Remote obtained : ', remote.green);
+          logger.log('Remote obtained : ' + remote.green);
           resolve(remote.trim());
         });
       }
@@ -224,29 +224,16 @@ function getRemoteForBranch(branchName) {
 }
 
 function getURLOfRemote(remote) {
-  logger.log('\nGetting URL of remote : ', remote);
-  var promise = new Promise(function (resolve, reject) {
+  logger.log('\nGetting URL of remote : ' + remote);
+  var promise = new Promise(function (resolve/*, reject*/) {
     logger.log('Executing ', 'git config remote.' + remote.trim() + '.url');
-    exec('git config remote.' + remote.trim() + '.url', { cwd: projectDir }, function (error, remoteURL, stderr) {
-      if(error){
+    exec('git config remote.' + remote.trim() + '.url', { cwd: projectDir }, function (error, remoteURL/*, stderr*/) {
+      if (error) {
         console.error(colors.red('Error occured :\n') , colors.red(error));
         process.exit(1);
       }
-      logger.log('URL of remote obtained : ', remoteURL.green);
+      logger.log('URL of remote obtained : ' + remoteURL.green);
       resolve(remoteURL);
-    });
-  });
-  return promise;
-}
-
-function getProjectInfo(projectName) {
-  logger.log('\nGetting project info for project : ', projectName);
-  var promise = new Promise(function (resolve, reject) {
-    gitlab.Projects.show(projectName).then(function (project) {
-      logger.log('Project info obtained : ', project);
-      resolve(project);
-    }).catch(function (err) {
-      console.log('Project info fetch failed : ' + err);
     });
   });
   return promise;
@@ -293,7 +280,6 @@ function compare(options) {
           var defaultBranch = project.default_branch;
           var targetBranch = options.target || defaultBranch;
           var sourceBranch = baseBranch;
-          var projectId = project.id;
           open(gitlab.options.url + '/' + projectName + '/compare/' + targetBranch + '...' + sourceBranch);
         }).catch(function (err) {
           console.log('Project info fetch failed : ' + err);
@@ -304,17 +290,17 @@ function compare(options) {
   });
 }
 
-function getRemote(options){
-  logger.log('\nGetting remote for options provided : ', options.remote);
-  var promise = new Promise(function (resolve, reject) {
-    if(options.remote){
+function getRemote(options) {
+  logger.log('\nGetting remote for options provided : ' + options.remote);
+  var promise = new Promise(function (resolve/*, reject*/) {
+    if (options.remote) {
       resolve(options.remote);
       return;
     }
 
     getBaseBranchName(options.base).then(function (baseBranch) {
       getRemoteForBranch(baseBranch).then(function (remote) {
-        resolve(remote);
+        resolve(remote, baseBranch);
       });
     });
   });
@@ -322,16 +308,16 @@ function getRemote(options){
 }
 
 function getUser(query) {
-  var promise = new Promise(function (resolve, reject) {
+  var promise = new Promise(function (resolve/*, reject*/) {
     if (!query) {
       resolve(null);
       return;
     }
 
-    logger.log('\nGetting user matching : ', query);
+    logger.log('\nGetting user matching : ' + query);
 
     gitlab.Users.search(query).then(function (userInfo) {
-      if (userInfo instanceof Array && userInfo.length > 0){
+      if (userInfo instanceof Array && userInfo.length > 0) {
         var user = userInfo[0];
         resolve(user);
       } else {
@@ -349,7 +335,7 @@ function getUser(query) {
 function openMergeRequests(options) {
   logger = log.getInstance(options.verbose);
 
-  getRemote(options).then(function(remote){
+  getRemote(options).then(function(remote, baseBranch) {
     if (!remote) {
       console.error(colors.red('Branch ' + baseBranch + ' is not tracked by any remote branch.'));
       console.log('Set the remote tracking by `git remote git branch --set-upstream <branch-name> <remote-name>/<branch-name>`');
@@ -397,7 +383,7 @@ function createMergeRequest(options) {
       getURLOfRemote(remote).then(function (remoteURL) {
         var gitlabHost = URL.parse(gitlab.options.url).host;
 
-        logger.log('\ngitlab host obtained : ', gitlabHost.green);
+        logger.log('\ngitlab host obtained : ' + gitlabHost.green);
 
         var match = remoteURL.match(regexParseProjectName);
         if (match) {
@@ -422,11 +408,10 @@ function createMergeRequest(options) {
           var labels = options.labels || '';
           var remove_source_branch = options.remove_source_branch || false;
           var squash = options.squash || false;
-          var title = '';
 
           logger.log('\n\n\nGetting target branch information'.blue);
 
-          getTargetBranchName(options.target || targetBranch).then(function(targetBranch){
+          getTargetBranchName(options.target || targetBranch).then(function(targetBranch) {
             getRemoteForBranch(options.target || targetBranch).then(function (targetRemote) {
               getURLOfRemote(targetRemote).then(function (targetRemoteUrl) {
                 var targetMatch = targetRemoteUrl.match(regexParseProjectName);
@@ -444,7 +429,7 @@ function createMergeRequest(options) {
 
                   var targetProjectId = targetProject.id;
 
-                  if (sourceBranch == targetBranch && projectId == targetProjectId){
+                  if (sourceBranch == targetBranch && projectId == targetProjectId) {
                     console.error(colors.red('\nCan not create this merge request'));
                     console.log(colors.red('You can not use same project/branch for source and target'));
                     process.exit(1);
@@ -455,8 +440,8 @@ function createMergeRequest(options) {
                       var title = userMessage.split('\n')[0];
                       var description = userMessage.split('\n').slice(2).join('    \n');
 
-                      logger.log('Merge request title : ', title.green);
-                      if (description) logger.log('Merge request description : ', description.green);
+                      logger.log('Merge request title : ' + title.green);
+                      if (description) logger.log('Merge request description : ' + description.green);
                       logger.log('\n\nCreating merge request'.blue);
 
                       gitlab.MergeRequests.create(projectId, sourceBranch, targetBranch, title, {
