@@ -52,14 +52,17 @@ Above will create merge request for merging feature/feature-name in develop.
 
 ### Options for create-merge-request
 
-    -h, --help                output usage information
-    -b, --base [optional]     Base branch name
-    -t, --target [optional]   Target branch name
-    -m, --message [optional]  Title of the merge request
-    -l, --labels [optional]   Comma separated list of labels to assign while creating request
-    -e, --edit [optional]     If supplied opens edit page of merge request. Opens merge request page otherwise
-    -v, --verbose [optional]  Detailed logging emitted on console for debug purpose
-    -a, --assignee [optional] If supplied, username will be searched in gitlab and created merge request will be assigned to th user. 
+    -b, --base [optional]                  Base branch name
+    -t, --target [optional]                Target branch name
+    -m, --message [optional]               Title of the merge request
+    -a, --assignee [optional]              User to assign merge request to
+    -l, --labels [optional]                Comma separated list of labels to assign while creating merge request
+    -r, --remove_source_branch [optional]  Flag indicating if a merge request should remove the source branch when merging
+    -s, --squash [optional]                Squash commits into a single commit when merging
+    -e, --edit [optional]                  If supplied opens edit page of merge request. Opens merge request page otherwise
+    -p, --print [optional]                 If supplied print the url of the merge request. Opens merge request page otherwise
+    -v, --verbose [optional]               Detailed logging emitted on console for debug purpose
+    -h, --help                             output usage information
 
 ## Configurations
 
