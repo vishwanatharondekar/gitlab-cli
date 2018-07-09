@@ -3,7 +3,9 @@
   "version": "1.0.2",
   "description": "",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "start": "node index.js"
+  },
   "author": "",
   "license": "MIT",
   "bin": {
@@ -17,7 +19,7 @@
     "dotenv": "^4.0.0",
     "editor": "^1.0.0",
     "git-url-parse": "^7.0.1",
-    "gitlab": "^1.7.1",
+    "gitlab": "^3.0.0",
     "open": "0.0.5",
     "promise": "^7.1.1",
     "readline-sync": "^1.4.7"
