@@ -15,7 +15,7 @@ var projectDir = process.cwd();
 var Promise = require('promise');
 var URL = require('url');
 var readlineSync = require('readline-sync');
-var regexParseProjectName = /(.+:\/\/.+?\/|.+:)(.+\/.+)+.git/;
+var regexParseProjectName = /^([^:]+:\/\/[^\/]+?\/|[^:]+:)([^\/]+\/[^\/]+?)(?:\.git)?\s*$/;
 
 var git = {
   config: {
@@ -389,7 +389,7 @@ function createMergeRequest(options) {
         if (match) {
           var projectName = match[2];
         } else {
-          console.error(colors.red('Remote at which ' + baseBranch + ' is tracked, It\'s URL doesn\'t seem to end with .git . It is assumed that your remote URL will end with .git in this utility. '));
+          console.error(colors.red('The remote at which ' + baseBranch + ' is tracked doesn\'t match the expected format.'));
           console.log('Please contact developer if this is a valid gitlab repository.');
           process.exit(1);
         }
@@ -418,7 +418,7 @@ function createMergeRequest(options) {
                 if (targetMatch) {
                   var targetProjectName = targetMatch[2];
                 } else {
-                  console.error(colors.red('Remote at which ' + targetBranch + ' is tracked, It\'s URL doesn\'t seem to end with .git . It is assumed that your remote URL will end with .git in this utility. '));
+                  console.error(colors.red('The remote at which ' + targetBranch + ' is tracked doesn\'t match the expected format.'));
                   console.log('Please contact developer if this is a valid gitlab repository.');
                   process.exit(1);
                 }
