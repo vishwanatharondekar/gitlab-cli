@@ -172,7 +172,11 @@ function getRemoteForBranch(branchName) {
         logger.log('Executing git config branch.' + branchName.trim() + '.remote');
         exec('git config branch.' + branchName.trim() + '.remote', { cwd: projectDir }, function (error, remote/*, stderr*/) {
           if (error) {
-            console.error(colors.red('Error occured :\n') , colors.red(error));
+            console.error(colors.red('Error occured while getting remote of the branch: ', branchName , '\n') );
+            console.log('\n\nSet the remote tracking by `git remote git branch --set-upstream '+ branchName +' origin/'+ branchName + '`. Assuming origin is your remote.');
+            console.log('Look at https://git-scm.com/docs/git-branch#Documentation/git-branch.txt---set-upstream for more details.')
+            console.log('\n\nBonus tip : You can avoid doing this each time by adding -u option while pushing to your origin.')
+            console.log('Eg: `git push origin '+ branchName +' -u`')
             process.exit(1);
           }
           logger.log('Remote obtained : ' + remote.green);
@@ -191,6 +195,7 @@ function getURLOfRemote(remote) {
     exec('git config remote.' + remote.trim() + '.url', { cwd: projectDir }, function (error, remoteURL/*, stderr*/) {
       if (error) {
         console.error(colors.red('Error occured :\n') , colors.red(error));
+        
         process.exit(1);
       }
       logger.log('URL of remote obtained : ' + remoteURL.green);
