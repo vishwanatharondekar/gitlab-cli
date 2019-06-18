@@ -46,6 +46,8 @@ var git = {
       }
       git.config.set('gitlab.token', options.token);
     }
+
+    options.rejectUnauthorized = false;
   
     return options;
   })();
