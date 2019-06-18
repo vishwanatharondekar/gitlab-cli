@@ -13,6 +13,7 @@ var projectDir = process.cwd();
 var Promise = require('promise');
 var URL = require('url');
 var options = require('./options')
+
 var regexParseProjectName = /^([^:]+:\/\/[^\/]+?\/|[^:]+:)([^\/]+\/[^\/]+?)(?:\.git)?\s*$/;
 
 var gitlab = new Gitlab(options);
@@ -342,12 +343,6 @@ function createMergeRequest(options) {
     store.set({sourceBranch : sourceBranch})
     return getRemoteForBranch(options.base || store.get('sourceBranch'))
   }).then(function (remote) {
-    if (!remote) {
-      console.error(colors.red('Branch ' + store.get('sourceBranch') + ' is not tracked by any remote branch.'));
-      console.log('Set the remote tracking by `git remote git branch --set-upstream <branch-name> <remote-name>/<branch-name>`');
-      console.log('Eg: `git branch --set-upstream foo upstream/foo`');
-      process.exit(1);
-    }
     store.set({sourceRemote : remote})
     return getURLOfRemote(remote)
   }).then(function (remoteURL) {
