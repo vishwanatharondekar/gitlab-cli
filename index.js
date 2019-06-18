@@ -459,10 +459,10 @@ function createMergeRequest(options) {
         url += '/edit';
       }
 
-      if (options.print) {
-        console.log(url);
-      } else {
+      if (options.open) {
         open(url);
+      } else {
+        console.log(url);
       }
     }
   })
@@ -515,8 +515,8 @@ program
   .option('-l, --labels [optional]', 'Comma separated list of labels to assign while creating merge request')
   .option('-r, --remove_source_branch [optional]', 'Flag indicating if a merge request should remove the source branch when merging')
   .option('-s, --squash [optional]', 'Squash commits into a single commit when merging')
-  .option('-e, --edit [optional]', 'If supplied opens edit page of merge request. Opens merge request page otherwise')
-  .option('-p, --print [optional]', 'If supplied print the url of the merge request. Opens merge request page otherwise')
+  .option('-e, --edit [optional]', 'If supplied opens edit page of merge request. Prints the merge request URL otherwise')
+  .option('-o, --open [optional]', 'If supplied open the page of the merge request. Prints the merge request URL otherwise')
   .option('-v, --verbose [optional]', 'Detailed logging emitted on console for debug purpose')
   .description('Create merge request on gitlab')
   .action(function (options) {
