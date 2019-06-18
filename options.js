@@ -1,5 +1,6 @@
 var childProcess = require('child_process');
-var gitUrlParse = require('git-url-parse')
+var gitUrlParse = require('git-url-parse');
+var readlineSync = require('readline-sync');
 var exec = childProcess.exec;
 var execSync = childProcess.execSync;
 var projectDir = process.cwd();
