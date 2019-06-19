@@ -59,8 +59,9 @@ Above will create merge request for merging feature/feature-name in develop.
     -l, --labels [optional]                Comma separated list of labels to assign while creating merge request
     -r, --remove_source_branch [optional]  Flag indicating if a merge request should remove the source branch when merging
     -s, --squash [optional]                Squash commits into a single commit when merging
-    -e, --edit [optional]                  If supplied opens edit page of merge request. Opens merge request page otherwise
-    -p, --print [optional]                 If supplied print the url of the merge request. Opens merge request page otherwise
+    -e, --edit [optional]                  If supplied opens edit page of merge request. Prints the merge request URL otherwise
+    -o, --open [optional]                  If supplied open the page of the merge request. Prints the merge request URL otherwise
+    -p, --print [deprecated]               Doesn't do anything. Kept here for backward compatibility. Default is print.
     -v, --verbose [optional]               Detailed logging emitted on console for debug purpose
     -h, --help                             output usage information
 
