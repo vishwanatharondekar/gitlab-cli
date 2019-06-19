@@ -518,6 +518,7 @@ program
   .option('-s, --squash [optional]', 'Squash commits into a single commit when merging')
   .option('-e, --edit [optional]', 'If supplied opens edit page of merge request. Prints the merge request URL otherwise')
   .option('-o, --open [optional]', 'If supplied open the page of the merge request. Prints the merge request URL otherwise')
+  .option('-p, --print [deprecated]', 'Doesn\`t do anything. Kept here for backward compatibility. Default is print.')
   .option('-v, --verbose [optional]', 'Detailed logging emitted on console for debug purpose')
   .description('Create merge request on gitlab')
   .action(function (options) {
