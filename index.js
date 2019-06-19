@@ -13,6 +13,7 @@ var projectDir = process.cwd();
 var Promise = require('promise');
 var URL = require('url');
 var options = require('./options')
+var packageJson = require('./package.json')
 
 var regexParseProjectName = /^([^:]+:\/\/[^\/]+?\/|[^:]+:)([^\/]+\/[^\/]+?)(?:\.git)?\s*$/;
 
@@ -479,7 +480,7 @@ function createMergeRequest(options) {
 
 program
   .description('gitlab command line utility')
-  .version('1.0.2');
+  .version(packageJson.version);
 
 program.Command.prototype.legacy = function (alias) {
   legacies[alias] = this._name;
