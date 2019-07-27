@@ -15,7 +15,7 @@ var URL = require('url');
 var options = require('./options')
 var packageJson = require('./package.json')
 
-var regexParseProjectName = /^([^:]+:\/\/[^\/]+?\/|[^:]+:)([^\/]+\/[^\/]+?)+(?:\.git)?\s*$/;
+var regexParseProjectName = /(.+:\/\/.+?\/|.+:)(.+\/[^\.]+)+(\.git)?/;
 
 var gitlab = new Gitlab(options);
 gitlab.options = options;
