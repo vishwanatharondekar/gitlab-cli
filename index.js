@@ -15,7 +15,7 @@ var URL = require('url');
 var options = require('./options')
 var packageJson = require('./package.json')
 
-var regexParseProjectName = /^([^:]+:\/\/[^\/]+?\/|[^:]+:)([^\/]+\/[^\/]+?)(?:\.git)?\s*$/;
+var regexParseProjectName = /^([^:]+:\/\/[^\/]+?\/|[^:]+:)([^\/]+\/[^\/]+?)+(?:\.git)?\s*$/;
 
 var gitlab = new Gitlab(options);
 gitlab.options = options;
@@ -355,7 +355,7 @@ function createMergeRequest(options) {
     if (match) {
       var projectName = match[2];
     } else {
-      console.error(colors.red('The remote at which ' + baseBranch + ' is tracked doesn\'t match the expected format.'));
+      console.error(colors.red('The remote at which ' + store.get('sourceBranch') + ' is tracked doesn\'t match the expected format.'));
       console.log('Please contact developer if this is a valid gitlab repository.');
       process.exit(1);
     }
