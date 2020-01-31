@@ -32,6 +32,7 @@ $ lab --help
 ## Commands available
 
     browse                    Open current branch page in gitlab
+    boards                    Open the boards of gitlab project
     compare [options]         Open compare page between two branches
     merge-request [options]   Create merge request on gitlab
     merge-requests [options]  Opens merge request page for the repo.
