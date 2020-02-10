@@ -209,7 +209,6 @@ function getURLOfRemote(remote) {
 
 function browse(options) {
   logger = log.getInstance(options.verbose);
-
   getBaseBranchName().then(function (curBranchName) {
     getRemoteForBranch(curBranchName).then(function (remote) {
       if (!remote) {
@@ -220,7 +219,12 @@ function browse(options) {
 
       getURLOfRemote(remote).then(function (remoteURL) {
         var projectName = remoteURL.match(regexParseProjectName)[2];
-        open(gitlab.options.url + '/' + projectName + '/tree/' + curBranchName);
+        var page = options.page || '';
+        if (page === '') {
+          open(gitlab.options.url + '/' + projectName + '/tree/' + curBranchName);
+        } else {
+          open(gitlab.options.url + '/' + projectName + '/' + page);
+        }
       });
 
     });
@@ -490,6 +494,7 @@ program.Command.prototype.legacy = function (alias) {
 program
   .command('browse')
   .option('-v, --verbose [optional]', 'Detailed logging emitted on console for debug purpose')
+  .option('-p, --page [optional]', 'Page name. e.g: issues, boards, merge_requests, pipelines, etc.')
   .description('Open current branch page in gitlab')
   .action(function (options) {
     browse(options);
