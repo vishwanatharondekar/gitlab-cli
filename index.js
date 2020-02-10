@@ -209,7 +209,6 @@ function getURLOfRemote(remote) {
 
 function browse(options) {
   logger = log.getInstance(options.verbose);
-
   getBaseBranchName().then(function (curBranchName) {
     getRemoteForBranch(curBranchName).then(function (remote) {
       if (!remote) {
@@ -220,27 +219,12 @@ function browse(options) {
 
       getURLOfRemote(remote).then(function (remoteURL) {
         var projectName = remoteURL.match(regexParseProjectName)[2];
-        open(gitlab.options.url + '/' + projectName + '/tree/' + curBranchName);
-      });
-
-    });
-  });
-}
-
-function boards(options) {
-  logger = log.getInstance(options.verbose);
-
-  getBaseBranchName().then(function (curBranchName) {
-    getRemoteForBranch(curBranchName).then(function (remote) {
-      if (!remote) {
-        console.error(colors.red('Branch ' + curBranchName + ' is not tracked by any remote branch.'));
-        console.log('Set the remote tracking by `git remote git branch --set-upstream <branch-name> <remote-name>/<branch-name>`');
-        console.log('Eg: `git branch --set-upstream foo upstream/foo`');
-      }
-
-      getURLOfRemote(remote).then(function (remoteURL) {
-        var projectName = remoteURL.match(regexParseProjectName)[2];
-        open(gitlab.options.url + '/' + projectName + '/boards/');
+        var page = options.page || '';
+        if (page === '') {
+          open(gitlab.options.url + '/' + projectName + '/tree/' + curBranchName);
+        } else {
+          open(gitlab.options.url + '/' + projectName + '/' + page);
+        }
       });
 
     });
@@ -510,17 +494,10 @@ program.Command.prototype.legacy = function (alias) {
 program
   .command('browse')
   .option('-v, --verbose [optional]', 'Detailed logging emitted on console for debug purpose')
+  .option('-p, --page [optional]', 'Page name. e.g: issues, boards, merge_requests, pipelines, etc.')
   .description('Open current branch page in gitlab')
   .action(function (options) {
     browse(options);
-  });
-
-program
-  .command('boards')
-  .option('-v, --verbose [optional]', 'Detailed logging emitted on console for debug purpose')
-  .description('Open the boards of gitlab project')
-  .action(function (options) {
-    boards(options);
   });
 
 program
