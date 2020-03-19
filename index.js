@@ -201,7 +201,7 @@ function getURLOfRemote(remote) {
         process.exit(1);
       }
       logger.log('URL of remote obtained : ' + remoteURL.green);
-      resolve(remoteURL);
+      resolve(remoteURL.trim());
     });
   });
   return promise;
