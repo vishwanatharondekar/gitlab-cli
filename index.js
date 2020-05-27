@@ -175,7 +175,7 @@ function getRemoteForBranch(branchName) {
         exec('git config branch.' + branchName.trim() + '.remote', { cwd: projectDir }, function (error, remote/*, stderr*/) {
           if (error) {
             console.error(colors.red('Error occured while getting remote of the branch: ', branchName , '\n') );
-            console.log('\n\nSet the remote tracking by `git remote git branch --set-upstream '+ branchName +' origin/'+ branchName + '`. Assuming origin is your remote.');
+            console.log('\n\nSet the remote tracking by `git branch --set-upstream-to=origin/'+ branchName + '`. Assuming origin is your remote.');
             console.log('Look at https://git-scm.com/docs/git-branch#Documentation/git-branch.txt---set-upstream for more details.')
             console.log('\n\nBonus tip : You can avoid doing this each time by adding -u option while pushing to your origin.')
             console.log('Eg: `git push origin '+ branchName +' -u`')
@@ -197,7 +197,7 @@ function getURLOfRemote(remote) {
     exec('git config remote.' + remote.trim() + '.url', { cwd: projectDir }, function (error, remoteURL/*, stderr*/) {
       if (error) {
         console.error(colors.red('Error occured :\n') , colors.red(error));
-        
+
         process.exit(1);
       }
       logger.log('URL of remote obtained : ' + remoteURL.green);
@@ -213,7 +213,7 @@ function browse(options) {
     getRemoteForBranch(curBranchName).then(function (remote) {
       if (!remote) {
         console.error(colors.red('Branch ' + curBranchName + ' is not tracked by any remote branch.'));
-        console.log('Set the remote tracking by `git remote git branch --set-upstream <branch-name> <remote-name>/<branch-name>`');
+        console.log('Set the remote tracking by `git branch --set-upstream <branch-name> <remote-name>/<branch-name>`');
         console.log('Eg: `git branch --set-upstream foo upstream/foo`');
       }
 
@@ -240,7 +240,7 @@ function compare(options) {
 
       if (!remote) {
         console.error(colors.red('Branch ' + baseBranch + ' is not tracked by any remote branch.'));
-        console.log('Set the remote tracking by `git remote git branch --set-upstream <branch-name> <remote-name>/<branch-name>`');
+        console.log('Set the remote tracking by `git branch --set-upstream <branch-name> <remote-name>/<branch-name>`');
         console.log('Eg: `git branch --set-upstream foo upstream/foo`');
         process.exit(1);
       }
@@ -310,7 +310,7 @@ function openMergeRequests(options) {
   getRemote(options).then(function(remote, baseBranch) {
     if (!remote) {
       console.error(colors.red('Branch ' + baseBranch + ' is not tracked by any remote branch.'));
-      console.log('Set the remote tracking by `git remote git branch --set-upstream <branch-name> <remote-name>/<branch-name>`');
+      console.log('Set the remote tracking by `git branch --set-upstream <branch-name> <remote-name>/<branch-name>`');
       console.log('Eg: `git branch --set-upstream foo upstream/foo`');
       process.exit(1);
     }
@@ -372,7 +372,7 @@ function createMergeRequest(options) {
 
     var defaultBranch = project.default_branch;
     var targetBranch = options.target || defaultBranch;
-    
+
 
     logger.log('\n\n\nGetting target branch information'.blue);
 
@@ -439,7 +439,7 @@ function createMergeRequest(options) {
     var remove_source_branch = options.remove_source_branch || false;
     var squash = options.squash || false;
     var assignee = store.get('assignee');
-    
+
     return gitlab.MergeRequests.create(sourceProjectId, sourceBranch, targetBranch, title, {
       description: description,
       labels: labels,
@@ -449,7 +449,7 @@ function createMergeRequest(options) {
       squash: squash,
     })
     store.set({userMessage : userMessage})
-  })  
+  })
   .then(function (mergeRequestResponse) {
     logger.log('Merge request response: \n\n', mergeRequestResponse);
 
