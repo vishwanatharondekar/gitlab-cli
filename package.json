@@ -38,7 +38,7 @@
     "dotenv": "^4.0.0",
     "editor": "^1.0.0",
     "git-url-parse": "^7.0.1",
-    "gitlab": "^3.0.0",
+    "gitlab": "^14.2.2",
     "open": "7.0.3",
     "promise": "^7.1.1",
     "readline-sync": "^1.4.7"
