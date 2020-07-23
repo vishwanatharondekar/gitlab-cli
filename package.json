@@ -37,7 +37,7 @@
     "commander": "^2.12.1",
     "dotenv": "^4.0.0",
     "editor": "^1.0.0",
-    "git-url-parse": "^7.0.1",
+    "git-url-parse": "^11.1.2",
     "gitlab": "^3.0.0",
     "open": "7.1.0",
     "promise": "^7.1.1",
