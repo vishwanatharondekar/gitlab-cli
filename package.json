@@ -40,7 +40,7 @@
     "git-url-parse": "^7.0.1",
     "gitlab": "^3.0.0",
     "open": "7.0.4",
-    "promise": "^7.1.1",
+    "promise": "^8.1.0",
     "readline-sync": "^1.4.7"
   }
 }
