@@ -248,7 +248,8 @@ function compare(options) {
       getURLOfRemote(remote).then(function (remoteURL) {
 
         var projectName = remoteURL.match(regexParseProjectName)[2];
-        gitlab.Projects.show(projectName).then(function (project) {
+        gitlab.Projects.search(projectName).then(function (project) {
+          project = project[0];
           var defaultBranch = project.default_branch;
           var targetBranch = options.target || defaultBranch;
           var sourceBranch = baseBranch;
@@ -366,8 +367,9 @@ function createMergeRequest(options) {
     logger.log('\nProject name derived from host :', projectName);
     logger.log('\nGetting gitlab project info for :', projectName);
     store.set({sourceRemoteURL : remoteURL})
-    return gitlab.Projects.show(projectName)
+    return gitlab.Projects.search(projectName)
   }).then(function (project) {
+    project = project[0];
     logger.log('Base project info obtained :', JSON.stringify(project).green);
 
     var defaultBranch = project.default_branch;
@@ -399,9 +401,10 @@ function createMergeRequest(options) {
 
     logger.log('Getting target project information');
     store.set({targetRemoteUrl : targetRemoteUrl})
-    return gitlab.Projects.show(targetProjectName)
+    return gitlab.Projects.search(targetProjectName)
   })
   .then(function (targetProject) {
+    targetProject = targetProject[0];
     logger.log('Target project info obtained :', JSON.stringify(targetProject).green);
 
     var targetProjectId = targetProject.id;
