@@ -1,9 +1,9 @@
 {
   "name": "git-lab-cli",
-  "version": "2.0.7",
-  "repository" : "https://github.com/vishwanatharondekar/gitlab-cli",
+  "version": "2.0.8",
+  "repository": "https://github.com/vishwanatharondekar/gitlab-cli",
   "description": "Create a merge request from command line in gitlab",
-  "keywords" : [
+  "keywords": [
     "cli",
     "gitlab",
     "gitlab-cli",
