@@ -34,7 +34,7 @@
   },
   "dependencies": {
     "colors": "^1.1.2",
-    "commander": "^2.12.1",
+    "commander": "^6.2.1",
     "dotenv": "^4.0.0",
     "editor": "^1.0.0",
     "git-url-parse": "^11.1.3",
