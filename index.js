@@ -14,6 +14,7 @@ var Promise = require('promise');
 var URL = require('url');
 var options = require('./options')
 var packageJson = require('./package.json')
+const shellescape = require('shell-escape');
 
 var regexParseProjectName = /(.+:\/\/.+?\/|.+:)(.+\/[^\.]+)+(\.git)?/;
 
@@ -56,7 +57,7 @@ function getMergeRequestTitle(title) {
 
       exec('git rev-parse --show-toplevel', function (error, repoDir/*, stderr*/) {
         var filePath = repoDir.trim() + '/.git/PULL_REQUEST_TITLE';
-        exec('git log -1 --pretty=%B > ' + filePath, function (/*error, remote, stderr*/) {
+        exec('git log -1 --pretty=%B > ' + shellescape([filePath]), function (/*error, remote, stderr*/) {
           exec('git config core.editor', function (error, gitEditor/*, stderr*/) {
             editor(filePath, { editor: gitEditor.trim() || null }, function (/*code, sig*/) {
               fs.readFile(filePath, 'utf8', function (err, data) {
@@ -171,8 +172,8 @@ function getRemoteForBranch(branchName) {
         resolve(branchRemoteInfo.remote);
       } else {
         //Remote info is not supplied. Get it from remote set
-        logger.log('Executing git config branch.' + branchName.trim() + '.remote');
-        exec('git config branch.' + branchName.trim() + '.remote', { cwd: projectDir }, function (error, remote/*, stderr*/) {
+        logger.log('Executing git config branch.' + shellescape([branchName.trim()]) + '.remote');
+        exec('git config branch.' + shellescape([branchName.trim()]) + '.remote', { cwd: projectDir }, function (error, remote/*, stderr*/) {
           if (error) {
             console.error(colors.red('Error occured while getting remote of the branch: ', branchName , '\n') );
             console.log('\n\nSet the remote tracking by `git branch --set-upstream-to=origin/'+ branchName + '`. Assuming origin is your remote.');
@@ -194,7 +195,7 @@ function getURLOfRemote(remote) {
   logger.log('\nGetting URL of remote : ' + remote);
   var promise = new Promise(function (resolve/*, reject*/) {
     logger.log('Executing ', 'git config remote.' + remote.trim() + '.url');
-    exec('git config remote.' + remote.trim() + '.url', { cwd: projectDir }, function (error, remoteURL/*, stderr*/) {
+    exec('git config remote.' + shellescape([remote.trim()]) + '.url', { cwd: projectDir }, function (error, remoteURL/*, stderr*/) {
       if (error) {
         console.error(colors.red('Error occured :\n') , colors.red(error));
 
