@@ -33,12 +33,12 @@
     "lab": "index.js"
   },
   "dependencies": {
+    "@gitbeaker/node": "^28.4.1",
     "colors": "^1.1.2",
     "commander": "^2.12.1",
     "dotenv": "^4.0.0",
     "editor": "^1.0.0",
     "git-url-parse": "^11.1.3",
-    "gitlab": "^3.0.0",
     "open": "7.2.0",
     "promise": "^7.1.1",
     "readline-sync": "^1.4.7",
