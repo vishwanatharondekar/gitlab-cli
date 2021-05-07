@@ -539,10 +539,12 @@ function createMergeRequest(options) {
     })
     .then(function(userMessage) {
       var title = userMessage.split('\n')[0]
-      var description = userMessage
-        .split('\n')
-        .slice(2)
-        .join('    \n')
+      var description =
+        options.description ||
+        userMessage
+          .split('\n')
+          .slice(2)
+          .join('    \n')
 
       logger.log('Merge request title : ' + title.green)
       if (description)
@@ -655,6 +657,7 @@ program
   .option('-b, --base [optional]', 'Base branch name')
   .option('-t, --target [optional]', 'Target branch name')
   .option('-m, --message [optional]', 'Title of the merge request')
+  .option('-d, --description [optional]', 'Description for the merge request')
   .option('-a, --assignee [optional]', 'User to assign merge request to')
   .option(
     '-l, --labels [optional]',
