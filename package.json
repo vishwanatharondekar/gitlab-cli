@@ -33,7 +33,7 @@
     "lab": "index.js"
   },
   "dependencies": {
-    "@gitbeaker/node": "^28.4.1",
+    "@gitbeaker/node": "^35.8.0",
     "colors": "^1.1.2",
     "commander": "^2.12.1",
     "dotenv": "^4.0.0",
