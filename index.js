@@ -465,7 +465,8 @@ function createMergeRequest(options) {
       })
     })
     .then(function(project) {
-      project = project[0]
+      var sourceRemoteURL = store.get('sourceRemoteURL')
+      project = project.find((innerProject)=>{ return innerProject.ssh_url_to_repo === sourceRemoteURL})
       logger.log('Base project info obtained :', JSON.stringify(project).green)
 
       var defaultBranch = project.default_branch
@@ -510,7 +511,8 @@ function createMergeRequest(options) {
       })
     })
     .then(function(targetProject) {
-      targetProject = targetProject[0]
+      var targetRemoteUrl = store.get('targetRemoteUrl')
+      targetProject = targetProject.find((project)=>{ return project.ssh_url_to_repo === targetRemoteUrl})
       logger.log(
         'Target project info obtained :',
         JSON.stringify(targetProject).green
