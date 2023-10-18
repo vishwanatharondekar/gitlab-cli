@@ -18,6 +18,7 @@ var git = {
   
   var options = (function () {
     var options = {
+      host: git.config.get('gitlab.url') || process.env.GITLAB_URL,
       url: git.config.get('gitlab.url') || process.env.GITLAB_URL,
       token: git.config.get('gitlab.token') || process.env.GITLAB_TOKEN,
     };
