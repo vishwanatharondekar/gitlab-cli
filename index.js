@@ -459,13 +459,15 @@ function createMergeRequest(options) {
       logger.log('\nProject name derived from host :', projectName)
       logger.log('\nGetting gitlab project info for :', projectName)
       store.set({ sourceRemoteURL: remoteURL })
+      store.set({ sourceProjectName: projectName })
       return gitlab.Projects.search(projectName, {
         search_namespaces: true,
         membership: true,
       })
     })
     .then(function(project) {
-      project = project[0]
+      var sourceProjectName = store.get('sourceProjectName')
+      project = project.find((innerProject)=>{ return innerProject.path_with_namespace === sourceProjectName})
       logger.log('Base project info obtained :', JSON.stringify(project).green)
 
       var defaultBranch = project.default_branch
@@ -504,13 +506,15 @@ function createMergeRequest(options) {
 
       logger.log('Getting target project information')
       store.set({ targetRemoteUrl: targetRemoteUrl })
+      store.set({ targetProjectName: targetProjectName })
       return gitlab.Projects.search(targetProjectName, {
         search_namespaces: true,
         membership: true,
       })
     })
     .then(function(targetProject) {
-      targetProject = targetProject[0]
+      var targetProjectName = store.get('targetProjectName')
+      targetProject = targetProject.find((project)=>{ return project.path_with_namespace === targetProjectName})
       logger.log(
         'Target project info obtained :',
         JSON.stringify(targetProject).green
