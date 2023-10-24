@@ -19,11 +19,10 @@ var git = {
   var options = (function () {
     var options = {
       host: git.config.get('gitlab.url') || process.env.GITLAB_URL,
-      url: git.config.get('gitlab.url') || process.env.GITLAB_URL,
       token: git.config.get('gitlab.token') || process.env.GITLAB_TOKEN,
     };
 
-    if (!options.url) {
+    if (!options.host) {
       var defaultInput = (function () {
         var url = git.config.get('remote.origin.url');
         if (!url || url.indexOf('bitbucket') !== -1 || url.indexOf('github') !== -1) {
@@ -32,15 +31,15 @@ var git = {
         return 'https://' + gitUrlParse(url).resource;
       })();
       var urlQuestion = ('Enter GitLab URL (' + defaultInput + '): ').yellow;
-      while (!options.url) {
-        options.url = readlineSync.question(urlQuestion, { defaultInput: defaultInput });
+      while (!options.host) {
+        options.host = readlineSync.question(urlQuestion, { defaultInput: defaultInput });
         urlQuestion = 'Invalid URL (try again): '.red;
       }
-      git.config.set('gitlab.url', options.url);
+      git.config.set('gitlab.url', options.host);
     }
 
     if (!options.token) {
-      var url = options.url + '/profile/personal_access_tokens';
+      var url = options.host + '/profile/personal_access_tokens';
       console.log('A personal access token is needed to use the GitLab API\n' + url.grey);
       var tokenQuestion = 'Enter personal access token: '.yellow;
       while (!options.token) {
