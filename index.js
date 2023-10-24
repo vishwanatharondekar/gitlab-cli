@@ -266,10 +266,10 @@ function browse(options) {
         var page = options.page || ''
         if (page === '') {
           open(
-            gitlab.options.url + '/' + projectName + '/tree/' + curBranchName
+            gitlab.options.host + '/' + projectName + '/tree/' + curBranchName
           )
         } else {
-          open(gitlab.options.url + '/' + projectName + '/' + page)
+          open(gitlab.options.host + '/' + projectName + '/' + page)
         }
       })
     })
@@ -306,7 +306,7 @@ function compare(options) {
             var targetBranch = options.target || defaultBranch
             var sourceBranch = baseBranch
             open(
-              gitlab.options.url +
+              gitlab.options.host +
                 '/' +
                 projectName +
                 '/compare/' +
@@ -405,7 +405,7 @@ function openMergeRequests(options) {
         }
 
         open(
-          gitlab.options.url +
+          gitlab.options.host +
             '/' +
             projectName +
             '/merge_requests' +
@@ -436,7 +436,7 @@ function createMergeRequest(options) {
       return getURLOfRemote(remote)
     })
     .then(function(remoteURL) {
-      var gitlabHost = URL.parse(gitlab.options.url).host
+      var gitlabHost = URL.parse(gitlab.options.host).host
 
       logger.log('\ngitlab host obtained : ' + gitlabHost.green)
 
@@ -590,7 +590,7 @@ function createMergeRequest(options) {
 
         if (!url) {
           url =
-            gitlab.options.url +
+            gitlab.options.host +
             '/' +
             targetProjectName +
             '/merge_requests/' +
